@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+      "name": "WPF App Framework",
+			"path": "../wpf-app-framework"
+		}
+  ],
+  "settings": {
+    "chat.tools.terminal.autoApprove": {
+      "dotnet test": true,
+      "dotnet build": true,
+      "dotnet clean": true
+    },
+    "powershell.cwd": "wpf-app-framework"
+  }
+}

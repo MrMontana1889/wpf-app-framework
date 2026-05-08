@@ -1,0 +1,235 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-Dev.Wpf.Converters">
+
+    <!--  Brushes  -->
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#1e1e1e" />
+    <SolidColorBrush x:Key="TextBrush" Color="#ffffff" />
+    <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#1e1e1e" />
+    <SolidColorBrush x:Key="ControlBorderBrush" Color="#3e3e42" />
+    <SolidColorBrush x:Key="SelectedItemBackgroundBrush" Color="#3A3D41" />
+
+    <!--  Dark gray  -->
+    <SolidColorBrush x:Key="SelectedItemForegroundBrush" Color="White" />
+    <SolidColorBrush x:Key="TreeExpanderVisibleBrush" Color="White" />
+    <SolidColorBrush x:Key="TreeExpanderHiddenBrush" Color="Transparent" />
+
+    <SolidColorBrush x:Key="SearchTextBoxBackgroundBrush" Color="#1E1E1E" />
+    <SolidColorBrush x:Key="SearchTextBoxForegroundBrush" Color="White" />
+    <SolidColorBrush x:Key="SearchTextBoxCaretBrush" Color="White" />
+    <SolidColorBrush x:Key="SearchTextBoxWatermarkBrush" Color="#AAAAAA" />
+
+    <!--  Light blue with better contrast  -->
+    <SolidColorBrush x:Key="SelectedBackgroundBrush" Color="DarkBlue" />
+    <SolidColorBrush x:Key="SelectedTextBrush" Color="Black" />
+
+    <!--  Dark  -->
+    <SolidColorBrush x:Key="PropertyGridEditorBackgroundBrush" Color="#FF1E1E1E" />
+
+    <SolidColorBrush x:Key="TextBrushOnLightBackground" Color="Black" />
+
+    <SolidColorBrush x:Key="SelectedTabBackgroundBrush" Color="#FF1E1E1E" />
+    <!--  Dark gray  -->
+    <SolidColorBrush x:Key="SelectedTabTextBrush" Color="#FFFFFFFF" />
+    <!--  White  -->
+    <SolidColorBrush x:Key="AccentBrush" Color="#FF569CD6" />
+    <!--  Dark accent blue  -->
+    <SolidColorBrush x:Key="HoverBackgroundBrush" Color="#FF2A2A2A" />
+    <!--  Dark hover gray  -->
+    <SolidColorBrush x:Key="ResizeGripBrush" Color="#999999" />
+
+    <!--  Diff preview reassurance/info banner  -->
+    <SolidColorBrush x:Key="DiffPreview.Reassurance.Background" Color="#2A3138" />
+    <SolidColorBrush x:Key="DiffPreview.Reassurance.Border" Color="#3D4956" />
+    <SolidColorBrush x:Key="DiffPreview.Reassurance.Foreground" Color="#E4EDF6" />
+    <SolidColorBrush x:Key="DiffPreview.SupportingText.Foreground" Color="#B3C0CD" />
+    <SolidColorBrush x:Key="DiffPreview.EmptyState.Foreground" Color="#95A4B3" />
+
+    <!--  TreeViewControl-specific brushes  -->
+    <SolidColorBrush x:Key="TreeNode.Background" Color="Transparent" />
+    <SolidColorBrush x:Key="TreeNode.Foreground" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="TreeNode.Selected.Background" Color="#264F78" />
+    <SolidColorBrush x:Key="TreeNode.Selected.Foreground" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="TreeNode.Hover.Background" Color="#2A2D2E" />
+    <SolidColorBrush x:Key="TreeNode.Hover.Foreground" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="TreeNode.Focus.Border" Color="#007ACC" />
+    <SolidColorBrush x:Key="TreeNode.Disabled.Foreground" Color="#656565" />
+    <SolidColorBrush x:Key="TreeNode.Glyph.Foreground" Color="#C5C5C5" />
+    <SolidColorBrush x:Key="TreeNode.Glyph.Hover" Color="#FFFFFF" />
+
+    <!--  Checkbox brushes for dark theme  -->
+    <SolidColorBrush x:Key="Checkbox.Background" Color="#333337" />
+    <SolidColorBrush x:Key="Checkbox.Border" Color="#999999" />
+    <SolidColorBrush x:Key="Checkbox.Glyph" Color="#F0F0F0" />
+    <SolidColorBrush x:Key="Checkbox.Hover.Background" Color="#3E3E42" />
+    <SolidColorBrush x:Key="Checkbox.Hover.Border" Color="#C5C5C5" />
+    <SolidColorBrush x:Key="Checkbox.Checked.Background" Color="#007ACC" />
+    <SolidColorBrush x:Key="Checkbox.Checked.Border" Color="#007ACC" />
+    <SolidColorBrush x:Key="Checkbox.Disabled.Background" Color="#252526" />
+    <SolidColorBrush x:Key="Checkbox.Disabled.Border" Color="#434346" />
+    <SolidColorBrush x:Key="Checkbox.Disabled.Glyph" Color="#656565" />
+
+    <!--  Menu popup brushes for toolbar-backed menu bar  -->
+    <SolidColorBrush x:Key="MenuPopupBackground" Color="#252526" />
+    <SolidColorBrush x:Key="MenuPopupBorder" Color="#3E3E42" />
+    <SolidColorBrush x:Key="MenuPopupForeground" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="MenuPopupHoverBackground" Color="#3E3E42" />
+    <SolidColorBrush x:Key="SeparatorBrush" Color="#3E3E42" />
+    <SolidColorBrush x:Key="HighlightBrush" Color="#3E3E42" />
+    <SolidColorBrush x:Key="PressedBrush" Color="#2D2D30" />
+    <SolidColorBrush x:Key="DisabledForegroundBrush" Color="#656565" />
+    <SolidColorBrush x:Key="ControlForegroundBrush" Color="#FFFFFF" />
+
+    <!--  TextBox Style  -->
+    <Style TargetType="TextBox">
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
+        <Setter Property="CaretBrush" Value="{DynamicResource TextBrush}" />
+    </Style>
+
+    <!--
+        Scoped menu-item style for ContextMenu surfaces only.
+        This restores compact context-menu spacing without reintroducing
+        application-wide Menu/MenuItem chrome behavior.
+    -->
+    <Style x:Key="ContextMenuItemStyle" BasedOn="{x:Null}" TargetType="MenuItem">
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Background" Value="#222222" />
+        <Setter Property="Padding" Value="6,2" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuItem">
+                    <Grid>
+                        <Border
+                            x:Name="OuterBorder"
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="18" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Path
+                                    x:Name="CheckMark"
+                                    Grid.Column="0"
+                                    Width="9"
+                                    Height="9"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Data="M 1,5 L 4,8 L 9,2"
+                                    Stroke="White"
+                                    StrokeEndLineCap="Round"
+                                    StrokeLineJoin="Round"
+                                    StrokeStartLineCap="Round"
+                                    StrokeThickness="1.5"
+                                    Visibility="Collapsed" />
+
+                                <ContentPresenter
+                                    Grid.Column="1"
+                                    ContentSource="Header"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    RecognizesAccessKey="True" />
+
+                                <TextBlock
+                                    Grid.Column="2"
+                                    Margin="6,0,4,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="{TemplateBinding Foreground}"
+                                    Text="{TemplateBinding InputGestureText}" />
+                            </Grid>
+                        </Border>
+
+                        <Popup
+                            x:Name="PART_Popup"
+                            AllowsTransparency="True"
+                            Focusable="False"
+                            IsOpen="{TemplateBinding IsSubmenuOpen}"
+                            Placement="Right"
+                            PopupAnimation="{DynamicResource {x:Static SystemParameters.MenuPopupAnimationKey}}">
+                            <Border
+                                Background="#222222"
+                                BorderBrush="#444444"
+                                BorderThickness="1"
+                                SnapsToDevicePixels="True">
+                                <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                            </Border>
+                        </Popup>
+                    </Grid>
+
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="CheckMark" Property="Visibility" Value="Visible" />
+                        </Trigger>
+
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="DarkGray" />
+                        </Trigger>
+
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#444444" />
+                        </Trigger>
+
+                        <Trigger Property="IsSubmenuOpen" Value="True">
+                            <Setter Property="Background" Value="#444444" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style BasedOn="{x:Null}" TargetType="ContextMenu">
+        <Setter Property="Background" Value="#222222" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="BorderBrush" Value="#444444" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="0" />
+        <Style.Resources>
+            <Style TargetType="MenuItem" BasedOn="{StaticResource ContextMenuItemStyle}" />
+        </Style.Resources>
+    </Style>
+
+    <!--
+        Explicit keyed alias of the implicit ContextMenu style.
+        Assign via Style="{DynamicResource ToolbarContextMenuStyle}" on any
+        ContextMenu that must be reliably themed regardless of its position
+        in the logical tree.
+    -->
+    <Style x:Key="ToolbarContextMenuStyle" TargetType="ContextMenu" BasedOn="{StaticResource {x:Type ContextMenu}}" />
+
+
+    <!--  ResizeGrip Style  -->
+    <!--  ResizeGrip Style  -->
+    <Style TargetType="ResizeGrip">
+        <Setter Property="Width" Value="16" />
+        <Setter Property="Height" Value="16" />
+        <Setter Property="Cursor" Value="SizeNWSE" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ResizeGrip">
+                    <Border Background="Transparent">
+                        <Canvas Width="12" Height="12" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                            <!--  1 dot  -->
+                            <Rectangle Canvas.Left="8" Canvas.Top="0" Width="2" Height="2" Fill="{DynamicResource ResizeGripBrush}" />
+                            <!--  2 dots  -->
+                            <Rectangle Canvas.Left="4" Canvas.Top="4" Width="2" Height="2" Fill="{DynamicResource ResizeGripBrush}" />
+                            <Rectangle Canvas.Left="8" Canvas.Top="4" Width="2" Height="2" Fill="{DynamicResource ResizeGripBrush}" />
+                            <!--  3 dots  -->
+                            <Rectangle Canvas.Left="0" Canvas.Top="8" Width="2" Height="2" Fill="{DynamicResource ResizeGripBrush}" />
+                            <Rectangle Canvas.Left="4" Canvas.Top="8" Width="2" Height="2" Fill="{DynamicResource ResizeGripBrush}" />
+                            <Rectangle Canvas.Left="8" Canvas.Top="8" Width="2" Height="2" Fill="{DynamicResource ResizeGripBrush}" />
+                        </Canvas>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    </ResourceDictionary>

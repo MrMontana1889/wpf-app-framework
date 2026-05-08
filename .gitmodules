@@ -1,0 +1,3 @@
+[submodule "submodules/PropertyTools"]
+	path = submodules/PropertyTools
+	url = https://github.com/PondPackMan2023/PropertyTools.git

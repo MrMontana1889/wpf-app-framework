@@ -1,0 +1,58 @@
+<views:BaseDialog x:Class="Dev.Wpf.Views.CustomizeToolbarDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="clr-namespace:Dev.Wpf.Views"
+        xmlns:behaviors="clr-namespace:Dev.Wpf.Behaviors"
+        xmlns:vm="clr-namespace:Dev.Core.ViewModels;assembly=Dev.Core"
+        mc:Ignorable="d"
+        Title="{Binding ToolbarName, StringFormat='Customize {0} Toolbar'}"
+        Width="300"
+        SizeToContent="Height"
+        MinHeight="160"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        d:DataContext="{d:DesignInstance vm:CustomizeToolbarViewModel}"
+        behaviors:DialogBehavior.DialogResult="{Binding DialogResult}">
+
+    <Grid Margin="16,16,16,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   Text="Select which buttons are visible:"
+                   Margin="0,0,0,10"
+                   FontWeight="SemiBold" />
+
+        <ItemsControl Grid.Row="1"
+                      ItemsSource="{Binding Items}"
+                      Margin="0,0,0,16">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <CheckBox Content="{Binding Label}"
+                              IsChecked="{Binding IsChecked}"
+                              Margin="0,3,0,3" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right">
+            <Button Content="Apply"
+                    MinWidth="75"
+                    IsDefault="True"
+                    Command="{Binding ApplyCommand}"
+                    Margin="0,0,8,0" />
+            <Button Content="Cancel"
+                    MinWidth="75"
+                    IsCancel="True"
+                    Command="{Binding CancelCommand}" />
+        </StackPanel>
+    </Grid>
+
+</views:BaseDialog>

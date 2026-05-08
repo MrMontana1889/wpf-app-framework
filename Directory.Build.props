@@ -1,0 +1,18 @@
+<Project>
+
+  <PropertyGroup>
+    <!-- Repo root -->
+    <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
+
+    <!-- Centralized output, per project -->
+    <BaseOutputPath>$(RepoRoot)out\bin\$(MSBuildProjectName)\</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(RepoRoot)out\obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+
+    <!-- Prevent extra path inflation -->
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <!-- <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath> -->
+
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+
+</Project>

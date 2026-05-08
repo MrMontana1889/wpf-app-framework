@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            10.0.x
+
+      - name: Restore
+        run: dotnet restore wpf-app-framework.slnx
+
+      - name: Build
+        run: dotnet build wpf-app-framework.slnx --configuration Release --no-restore
+
+      - name: Test with coverage
+        run: >-
+          dotnet test wpf-app-framework.slnx
+          --configuration Release
+          --no-build
+          --logger "trx"
+          --results-directory "TestResults"
+          --collect:"XPlat Code Coverage"
+          --filter "FullyQualifiedName!~PropertyTools"
+
+      - name: Test PropertyTools.Wpf.Tests
+        run: >-
+          dotnet test submodules/PropertyTools/Source/PropertyTools.Wpf.Tests/PropertyTools.Wpf.Tests.csproj
+          --configuration Release
+          --no-build
+          --logger "trx"
+          --results-directory "TestResults"
+
+      - name: Install ReportGenerator
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+      - name: Generate coverage report
+        shell: pwsh
+        run: >-
+          reportgenerator
+          -reports:"TestResults/**/coverage.cobertura.xml"
+          -targetdir:"TestResults/CoverageReport"
+          -reporttypes:"Cobertura;MarkdownSummaryGithub"
+
+      - name: Add coverage summary to job
+        shell: pwsh
+        run: Get-Content "TestResults/CoverageReport/SummaryGithub.md" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: TestResults/**/*.trx
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: TestResults/CoverageReport
+
+      # - name: Upload coverage reports to Codecov
+      #   uses: codecov/codecov-action@v5
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}
+      #     files: TestResults/**/coverage.cobertura.xml
+      #     disable_search: false
+      #     fail_ci_if_error: false
+      

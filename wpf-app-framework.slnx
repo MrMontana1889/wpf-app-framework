@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/submodules/" />
+  <Folder Name="/submodules/PropertyTools/">
+    <Project Path="submodules/PropertyTools/Source/PropertyTools.Wpf/PropertyTools.Wpf.csproj" />
+    <Project Path="submodules/PropertyTools/Source/PropertyTools/PropertyTools.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="tests/Dev.Core.Tests/Dev.Core.Tests.csproj" />
+    <Project Path="tests/Dev.Wpf.Tests/Dev.Wpf.Tests.csproj" />
+  </Folder>
+  <Project Path="src/Dev.Core/Dev.Core.csproj" />
+  <Project Path="src/Dev.Wpf/Dev.Wpf.csproj" />
+</Solution>
