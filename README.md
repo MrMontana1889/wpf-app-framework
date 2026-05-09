@@ -103,6 +103,17 @@ This framework is consumed as **source**, currently via Git submodules, by WPF d
 
 It is intentionally **not yet packaged** as a NuGet dependency. Once APIs stabilize, packaging may be evaluated.
 
+### Submodule Configuration
+
+Because Dev.Wpf references PropertyTools, you should add a submodule both wpf-app-framework AND PropertyTools. 
+They should both go in the submodules folder in the root of your repo.
+
+For wpf-app-framework, you should pin to the `bba/ref-path` branch.
+For PropertyTools, use the fork at `https://github.com/PondPackMan2023/PropertyTools` and pin to the `bba/targetframework` branch.
+
+> **_NOTE:_** If you decide to use the PropertyTools repo directly, make sure you update the target framework to use *just* net10.
+Using the multitargeting of the PropertyTools and PropertyTools.Wpf projects appears to cause some difficulties with Dev.Wpf.
+
 ---
 
 ## Consumers
