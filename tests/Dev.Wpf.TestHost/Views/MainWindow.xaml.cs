@@ -1,6 +1,8 @@
 // MainWindow.xaml.cs
 // Copyright (c) 2026 Bentley Systems, Incorporated. All Rights Reserved.
 
+using Dev.Core.Services;
+using Dev.Wpf.Views;
 using System.Windows;
 
 namespace Dev.Wpf.TestHost.Views;
@@ -21,9 +23,10 @@ namespace Dev.Wpf.TestHost.Views;
 /// and attached behaviors.
 /// </para>
 /// </summary>
-public partial class MainWindow : Window
+public partial class MainWindow : BaseWindow
 {
-    public MainWindow()
+    public MainWindow(IWindowPersistenceService persistenceManager)
+        : base(persistenceManager)
     {
         InitializeComponent();
     }

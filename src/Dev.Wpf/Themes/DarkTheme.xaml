@@ -57,6 +57,7 @@
     <SolidColorBrush x:Key="TreeNode.Disabled.Foreground" Color="#656565" />
     <SolidColorBrush x:Key="TreeNode.Glyph.Foreground" Color="#C5C5C5" />
     <SolidColorBrush x:Key="TreeNode.Glyph.Hover" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="TreeView.Background" Color="#1E1E1E" />
 
     <!--  Checkbox brushes for dark theme  -->
     <SolidColorBrush x:Key="Checkbox.Background" Color="#333337" />
@@ -81,6 +82,10 @@
     <SolidColorBrush x:Key="DisabledForegroundBrush" Color="#656565" />
     <SolidColorBrush x:Key="ControlForegroundBrush" Color="#FFFFFF" />
 
+    <!--  Control glyphs (icons, arrows)  -->
+    <SolidColorBrush x:Key="ControlGlyphForegroundBrush" Color="#E5E5E5" />
+    <SolidColorBrush x:Key="ControlGlyphDisabledBrush" Color="#777777" />
+
     <!--  TextBox Style  -->
     <Style TargetType="TextBox">
         <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" />
@@ -94,7 +99,10 @@
         This restores compact context-menu spacing without reintroducing
         application-wide Menu/MenuItem chrome behavior.
     -->
-    <Style x:Key="ContextMenuItemStyle" BasedOn="{x:Null}" TargetType="MenuItem">
+    <Style
+        x:Key="ContextMenuItemStyle"
+        BasedOn="{x:Null}"
+        TargetType="MenuItem">
         <Setter Property="Foreground" Value="White" />
         <Setter Property="Background" Value="#222222" />
         <Setter Property="Padding" Value="6,2" />
@@ -132,9 +140,9 @@
 
                                 <ContentPresenter
                                     Grid.Column="1"
-                                    ContentSource="Header"
                                     HorizontalAlignment="Left"
                                     VerticalAlignment="Center"
+                                    ContentSource="Header"
                                     RecognizesAccessKey="True" />
 
                                 <TextBlock
@@ -192,7 +200,7 @@
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="0" />
         <Style.Resources>
-            <Style TargetType="MenuItem" BasedOn="{StaticResource ContextMenuItemStyle}" />
+            <Style BasedOn="{StaticResource ContextMenuItemStyle}" TargetType="MenuItem" />
         </Style.Resources>
     </Style>
 
@@ -202,7 +210,10 @@
         ContextMenu that must be reliably themed regardless of its position
         in the logical tree.
     -->
-    <Style x:Key="ToolbarContextMenuStyle" TargetType="ContextMenu" BasedOn="{StaticResource {x:Type ContextMenu}}" />
+    <Style
+        x:Key="ToolbarContextMenuStyle"
+        BasedOn="{StaticResource {x:Type ContextMenu}}"
+        TargetType="ContextMenu" />
 
 
     <!--  ResizeGrip Style  -->
@@ -215,16 +226,50 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ResizeGrip">
                     <Border Background="Transparent">
-                        <Canvas Width="12" Height="12" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                        <Canvas
+                            Width="12"
+                            Height="12"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom">
                             <!--  1 dot  -->
-                            <Rectangle Canvas.Left="8" Canvas.Top="0" Width="2" Height="2" Fill="{DynamicResource ResizeGripBrush}" />
+                            <Rectangle
+                                Canvas.Left="8"
+                                Canvas.Top="0"
+                                Width="2"
+                                Height="2"
+                                Fill="{DynamicResource ResizeGripBrush}" />
                             <!--  2 dots  -->
-                            <Rectangle Canvas.Left="4" Canvas.Top="4" Width="2" Height="2" Fill="{DynamicResource ResizeGripBrush}" />
-                            <Rectangle Canvas.Left="8" Canvas.Top="4" Width="2" Height="2" Fill="{DynamicResource ResizeGripBrush}" />
+                            <Rectangle
+                                Canvas.Left="4"
+                                Canvas.Top="4"
+                                Width="2"
+                                Height="2"
+                                Fill="{DynamicResource ResizeGripBrush}" />
+                            <Rectangle
+                                Canvas.Left="8"
+                                Canvas.Top="4"
+                                Width="2"
+                                Height="2"
+                                Fill="{DynamicResource ResizeGripBrush}" />
                             <!--  3 dots  -->
-                            <Rectangle Canvas.Left="0" Canvas.Top="8" Width="2" Height="2" Fill="{DynamicResource ResizeGripBrush}" />
-                            <Rectangle Canvas.Left="4" Canvas.Top="8" Width="2" Height="2" Fill="{DynamicResource ResizeGripBrush}" />
-                            <Rectangle Canvas.Left="8" Canvas.Top="8" Width="2" Height="2" Fill="{DynamicResource ResizeGripBrush}" />
+                            <Rectangle
+                                Canvas.Left="0"
+                                Canvas.Top="8"
+                                Width="2"
+                                Height="2"
+                                Fill="{DynamicResource ResizeGripBrush}" />
+                            <Rectangle
+                                Canvas.Left="4"
+                                Canvas.Top="8"
+                                Width="2"
+                                Height="2"
+                                Fill="{DynamicResource ResizeGripBrush}" />
+                            <Rectangle
+                                Canvas.Left="8"
+                                Canvas.Top="8"
+                                Width="2"
+                                Height="2"
+                                Fill="{DynamicResource ResizeGripBrush}" />
                         </Canvas>
                     </Border>
                 </ControlTemplate>
@@ -232,4 +277,4 @@
         </Setter>
     </Style>
 
-    </ResourceDictionary>
+</ResourceDictionary>

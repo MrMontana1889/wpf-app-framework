@@ -1,13 +1,15 @@
 // MainWindowViewModel.cs
 // Copyright (c) 2026 Bentley Systems, Incorporated. All Rights Reserved.
 
-using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Dev.Core.Services;
 using Dev.Core.Tree;
 using Dev.Wpf.Controls;
-using Dev.Wpf.Themes;
+using Dev.Wpf.Services;
 using Dev.Wpf.TestHost.Samples;
+using Dev.Wpf.Themes;
+using System.Collections.ObjectModel;
 
 namespace Dev.Wpf.TestHost.ViewModels;
 
@@ -18,12 +20,16 @@ namespace Dev.Wpf.TestHost.ViewModels;
 /// </summary>
 public sealed partial class MainWindowViewModel : ObservableObject
 {
-    public MainWindowViewModel()
+    private readonly IThemeService _themeService;
+
+    public MainWindowViewModel(IThemeService themeService)
     {
         // Apply default light theme on startup
         // In BBApp.Next this would delegate to IThemeService via DI
-        ThemeManager.ApplyTheme("Light");
+        _themeService = themeService;
     }
+
+    private IThemeService ThemeService => _themeService;
 
     // -----------------------------------------------------------------------
     // Sample data and providers (never change at runtime)
@@ -68,7 +74,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         // Apply theme change via ThemeManager
         // In BBApp.Next this would delegate to IThemeService
         var theme = value ? "Dark" : "Light";
-        ThemeManager.ApplyTheme(theme);
+        ThemeService.ApplyTheme(theme);
     }
 
     // -----------------------------------------------------------------------
