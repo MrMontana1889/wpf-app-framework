@@ -1,5 +1,5 @@
 // IPromptRegistry.cs
-// Copyright (c) 2026 Bentley Systems, Incorporated. All Rights Reserved.
+// Copyright (c) 2026 MrMontana1889.  See LICENSE
 
 namespace Dev.Core.Prompts;
 
