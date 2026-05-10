@@ -2,10 +2,10 @@
 // Copyright (c) 2026 Bentley Systems, Incorporated. All Rights Reserved.
 
 using Dev.Core.Services;
+using Dev.Core.Toolbar;
 using Dev.Core.ViewModels.Controls;
 using NSubstitute;
 using NUnit.Framework;
-using System.Windows.Input;
 
 namespace Dev.Core.Tests.Services;
 
@@ -79,6 +79,36 @@ public class ToolbarRegistryServiceTests
         Assert.That(toolbar.IsToolbarVisible, Is.True);
     }
 
+    [Test]
+    public void RegisterDefinition_AddsDefinition()
+    {
+        var definition = new ToolbarDefinition(new ToolbarId("Build"), "Build", canHide: true, defaultVisible: true);
+
+        _service.RegisterDefinition(definition);
+
+        Assert.That(_service.ToolbarDefinitions, Has.Count.EqualTo(1));
+        Assert.That(_service.ToolbarDefinitions[0].Id, Is.EqualTo(new ToolbarId("Build")));
+    }
+
+    [Test]
+    public void RegisterDefinition_DuplicateId_Throws()
+    {
+        var definition = new ToolbarDefinition(new ToolbarId("Build"), "Build");
+        _service.RegisterDefinition(definition);
+
+        Assert.Throws<InvalidOperationException>(() => _service.RegisterDefinition(definition));
+    }
+
+    [Test]
+    public void RegisterDefinition_DefaultVisibleFalse_AppliesWhenNoPersistedValue()
+    {
+        var definition = new ToolbarDefinition(new ToolbarId("Build"), "Build", defaultVisible: false);
+
+        _service.RegisterDefinition(definition);
+
+        Assert.That(_service.IsVisible(new ToolbarId("Build")), Is.False);
+    }
+
     // --- Persistence ---
 
     [Test]
@@ -90,6 +120,19 @@ public class ToolbarRegistryServiceTests
 
         var path = Path.Combine(_testDirectory, "toolbar-registry.json");
         Assert.That(File.Exists(path), Is.True);
+    }
+
+    [Test]
+    public void SaveVisibility_PersistsByToolbarIdKey()
+    {
+        var toolbarId = new ToolbarId("Build.Toolbar");
+        _service.RegisterDefinition(new ToolbarDefinition(toolbarId, "Build Toolbar", defaultVisible: true));
+        _service.SetVisibility(toolbarId, isVisible: false);
+
+        var path = Path.Combine(_testDirectory, "toolbar-registry.json");
+        var json = File.ReadAllText(path);
+
+        Assert.That(json, Does.Contain("\"Build.Toolbar\""));
     }
 
     [Test]
@@ -145,6 +188,19 @@ public class ToolbarRegistryServiceTests
         });
     }
 
+    [Test]
+    public void SaveAndLoad_ByToolbarId_RestoresVisibilityWithoutToolbarModel()
+    {
+        var toolbarId = new ToolbarId("Build.Toolbar");
+        _service.RegisterDefinition(new ToolbarDefinition(toolbarId, "Build Toolbar", defaultVisible: true));
+        _service.SetVisibility(toolbarId, isVisible: false);
+
+        var newService = new ToolbarRegistryService(_testDirectory);
+        newService.RegisterDefinition(new ToolbarDefinition(toolbarId, "Build Toolbar", defaultVisible: true));
+
+        Assert.That(newService.IsVisible(toolbarId), Is.False);
+    }
+
     // --- Auto-save ---
 
     [Test]
@@ -160,6 +216,17 @@ public class ToolbarRegistryServiceTests
         newService.Register(reloaded);
 
         Assert.That(reloaded.IsToolbarVisible, Is.False);
+    }
+
+    [Test]
+    public void SetVisibility_ByToolbarId_UpdatesRegisteredToolbar()
+    {
+        var toolbar = new TestToolbarModel(_dialogService, "Build");
+        _service.Register(toolbar);
+
+        _service.SetVisibility(new ToolbarId("Build"), isVisible: false);
+
+        Assert.That(toolbar.IsToolbarVisible, Is.False);
     }
 
     // --- ToggleVisibilityCommand ---
@@ -216,5 +283,72 @@ public class ToolbarRegistryServiceTests
         _service.Register(toolbar, canHide: false);
 
         Assert.That(toolbar.CanHide, Is.False);
+    }
+
+    [Test]
+    public void SetVisibility_WhenCanHideFalse_StaysVisible()
+    {
+        var toolbarId = new ToolbarId("Project");
+        _service.RegisterDefinition(new ToolbarDefinition(toolbarId, "Project", canHide: false, defaultVisible: false));
+
+        _service.SetVisibility(toolbarId, isVisible: false);
+
+        Assert.That(_service.IsVisible(toolbarId), Is.True);
+    }
+
+    // --- VisibilityChanged Event ---
+
+    [Test]
+    public void SetVisibility_RaisesVisibilityChangedEvent()
+    {
+        var toolbarId = new ToolbarId("Build");
+        _service.RegisterDefinition(new ToolbarDefinition(toolbarId, "Build", defaultVisible: true));
+
+        var eventRaised = false;
+        var capturedArgs = (ToolbarVisibilityChangedEventArgs?)null;
+        _service.VisibilityChanged += (sender, e) =>
+        {
+            if (e.ToolbarId == toolbarId)
+            {
+                eventRaised = true;
+                capturedArgs = e;
+            }
+        };
+
+        _service.SetVisibility(toolbarId, isVisible: false);
+
+        Assert.That(eventRaised, Is.True);
+        Assert.That(capturedArgs?.IsVisible, Is.False);
+    }
+
+    [Test]
+    public void SetVisibility_SameVisibility_DoesNotRaiseEvent()
+    {
+        var toolbarId = new ToolbarId("Build");
+        _service.RegisterDefinition(new ToolbarDefinition(toolbarId, "Build", defaultVisible: true));
+
+        var eventRaised = false;
+        _service.VisibilityChanged += (sender, e) =>
+        {
+            if (e.ToolbarId == toolbarId)
+                eventRaised = true;
+        };
+
+        // Set to same value as default
+        _service.SetVisibility(toolbarId, isVisible: true);
+
+        Assert.That(eventRaised, Is.False);
+    }
+
+    [Test]
+    public void RegisterDefinition_DoesNotRaiseVisibilityChangedEvent()
+    {
+        var toolbarId = new ToolbarId("Build");
+        var eventRaised = false;
+        _service.VisibilityChanged += (sender, e) => eventRaised = true;
+
+        _service.RegisterDefinition(new ToolbarDefinition(toolbarId, "Build", defaultVisible: true));
+
+        Assert.That(eventRaised, Is.False);
     }
 }
