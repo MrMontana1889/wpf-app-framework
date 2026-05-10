@@ -38,9 +38,8 @@
             </MenuItem>
         </Menu>
 
-        <controls:ToolbarHostControl
-            DockPanel.Dock="Top"
-            ItemsSource="{Binding ToolbarItems}" />
+        <controls:ToolbarHostControl DockPanel.Dock="Top" ItemsSource="{Binding PrimaryToolbarItems}" />
+        <controls:ToolbarHostControl DockPanel.Dock="Top" ItemsSource="{Binding SecondaryToolbarItems}" />
 
         <!--
             ================================================================

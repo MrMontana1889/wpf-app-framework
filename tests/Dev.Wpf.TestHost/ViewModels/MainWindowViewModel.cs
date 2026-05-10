@@ -47,7 +47,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
     /// <summary>
     /// Semantic toolbar composition projected by <c>ToolbarHostControl</c>.
     /// </summary>
-    public ObservableCollection<ToolbarItem> ToolbarItems { get; } = [];
+    public ObservableCollection<ToolbarItem> PrimaryToolbarItems { get; } = [];
+
+    public ObservableCollection<ToolbarItem> SecondaryToolbarItems { get; } = [];
 
     /// <summary>
     /// Diagnostic combo-box choices for toolbar projection validation.
@@ -346,14 +348,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 order: 80,
                 command: ToggleDarkThemeCommand,
                 isChecked: IsDarkTheme),
+        };
 
-            new ToolbarItem(
-                new ToolbarItemId("TestHost.Toolbar.Separator4"),
-                ToolbarItemKind.Separator,
-                new ToolbarItemSemanticMetadata(new ToolbarItemText("Separator")),
-                ToolbarItemDisplayIntent.TextOnly,
-                order: 90),
+        PrimaryToolbarItems.Clear();
+        foreach (var item in items)
+            PrimaryToolbarItems.Add(item);
 
+        var items2 = new[]
+        {
             new ToolbarItem(
                 new ToolbarItemId("TestHost.Toolbar.OptionA"),
                 ToolbarItemKind.CheckBox,
@@ -386,8 +388,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 selectedValue: ToolbarChoice),
         };
 
-        ToolbarItems.Clear();
-        foreach (var item in items)
-            ToolbarItems.Add(item);
+        SecondaryToolbarItems.Clear();
+        foreach (var item in items2)
+            SecondaryToolbarItems.Add(item);
     }
 }
