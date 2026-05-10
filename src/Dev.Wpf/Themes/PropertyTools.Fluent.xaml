@@ -3,25 +3,25 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:pt="clr-namespace:PropertyTools.Wpf;assembly=PropertyTools.Wpf">
 
-    <!-- PropertyGrid background / foreground -->
+    <!--  PropertyGrid background / foreground  -->
     <Style TargetType="pt:PropertyGrid">
-        <Setter Property="Background" Value="{DynamicResource SolidBackgroundFillColorBaseBrush}"/>
-        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
-        <Setter Property="Margin" Value="8"/>
+        <Setter Property="Background" Value="{DynamicResource SolidBackgroundFillColorBaseBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+        <Setter Property="Margin" Value="8" />
     </Style>
 
-    <!-- Category header -->
+    <!--  Category header  -->
     <Style TargetType="{x:Type GroupItem}">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="GroupItem">
                     <StackPanel>
                         <TextBlock
-                            Text="{Binding Name}"
+                            Margin="0,12,0,4"
                             FontSize="16"
                             FontWeight="SemiBold"
                             Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                            Margin="0,12,0,4" />
+                            Text="{Binding Name}" />
                         <ItemsPresenter />
                     </StackPanel>
                 </ControlTemplate>
@@ -29,28 +29,28 @@
         </Setter>
     </Style>
 
-    <!-- Label styling -->
+    <!--  Label styling  -->
     <Style TargetType="Label">
-        <Setter Property="FontSize" Value="14"/>
-        <Setter Property="VerticalAlignment" Value="Center"/>
-        <Setter Property="Padding" Value="0"/>
-        <Setter Property="Margin" Value="0,2,8,2"/>
-        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Margin" Value="0,2,8,2" />
+        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
     </Style>
 
-    <!-- TextBox editor -->
+    <!--  TextBox editor  -->
     <Style TargetType="TextBox">
-        <Setter Property="FontSize" Value="14"/>
-        <Setter Property="VerticalContentAlignment" Value="Center"/>
-        <Setter Property="Padding" Value="6,2"/>
-        <Setter Property="Margin" Value="0,2,0,2"/>
-        <Setter Property="MinHeight" Value="26"/>
-        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
-        <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}"/>
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Padding" Value="6,2" />
+        <Setter Property="Margin" Value="0,2,0,2" />
+        <Setter Property="MinHeight" Value="26" />
+        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
     </Style>
 
-    <Style TargetType="pt:TextBoxEx" BasedOn="{StaticResource {x:Type TextBox}}">
-        <!-- TextBoxEx uses WPF's implicit text-edit menu; make it explicit so Popup-hosted menu resolves themed ContextMenu/MenuItem styles. -->
+    <Style BasedOn="{StaticResource {x:Type TextBox}}" TargetType="pt:TextBoxEx">
+        <!--  TextBoxEx uses WPF's implicit text-edit menu; make it explicit so Popup-hosted menu resolves themed ContextMenu/MenuItem styles.  -->
         <Setter Property="ContextMenu">
             <Setter.Value>
                 <ContextMenu>
@@ -62,21 +62,21 @@
         </Setter>
     </Style>
 
-    <!-- CheckBox editor -->
+    <!--  CheckBox editor  -->
     <Style TargetType="CheckBox">
-        <Setter Property="FontSize" Value="14"/>
-        <Setter Property="VerticalContentAlignment" Value="Center"/>
-        <Setter Property="Margin" Value="0,2,0,2"/>
-        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Margin" Value="0,2,0,2" />
+        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
     </Style>
 
-    <!-- RadioButton editor -->
+    <!--  RadioButton editor  -->
     <Style TargetType="RadioButton">
-        <Setter Property="FontSize" Value="14"/>
-        <Setter Property="VerticalContentAlignment" Value="Center"/>
-        <Setter Property="Padding" Value="2,0"/>
-        <Setter Property="Margin" Value="0,1,0,1"/>
-        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Padding" Value="2,0" />
+        <Setter Property="Margin" Value="0,1,0,1" />
+        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
     </Style>
 
 </ResourceDictionary>
