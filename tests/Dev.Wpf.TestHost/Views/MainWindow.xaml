@@ -21,22 +21,7 @@
 
     <DockPanel LastChildFill="True">
 
-        <!--
-            ================================================================
-            Menu bar (ThemeMode diagnostic)
-            ================================================================
-        -->
-        <Menu DockPanel.Dock="Top">
-            <MenuItem Header="_File">
-                <MenuItem Header="Exit" />
-            </MenuItem>
-            <MenuItem Header="_View">
-                <MenuItem Header="Dummy Item" />
-            </MenuItem>
-            <MenuItem Header="_Help">
-                <MenuItem Header="About" />
-            </MenuItem>
-        </Menu>
+        <controls:MenuHostControl DockPanel.Dock="Top" ItemsSource="{Binding MainMenuItems}" />
 
         <controls:ToolbarHostControl DockPanel.Dock="Top" ItemsSource="{Binding PrimaryToolbarItems}" />
         <controls:ToolbarHostControl DockPanel.Dock="Top" ItemsSource="{Binding SecondaryToolbarItems}" />

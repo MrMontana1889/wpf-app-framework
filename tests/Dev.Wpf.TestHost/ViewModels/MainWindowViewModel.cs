@@ -3,6 +3,7 @@
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Dev.Core.Menu;
 using Dev.Core.Services;
 using Dev.Core.Toolbar;
 using Dev.Core.Tree;
@@ -28,6 +29,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _themeService = themeService;
         IsDarkTheme = true;
 
+        RebuildMenuItems();
         RebuildToolbarItems();
     }
 
@@ -43,6 +45,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     /// <summary>Context menu provider wired to the tree.</summary>
     public SampleContextMenuProvider ContextMenuProvider { get; } = new();
+
+    /// <summary>
+    /// Semantic toolbar composition projected by <c>ToolbarHostControl</c>.
+    /// </summary>
+    public ObservableCollection<MenuItem> MainMenuItems { get; } = [];
 
     /// <summary>
     /// Semantic toolbar composition projected by <c>ToolbarHostControl</c>.
@@ -177,6 +184,16 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void ToggleToolbarOptionA() => ToolbarOptionA = !ToolbarOptionA;
 
+    [RelayCommand]
+    private static void ExitMenu()
+    {
+    }
+
+    [RelayCommand]
+    private static void AboutMenu()
+    {
+    }
+
     /// <summary>
     /// Handles a drag-and-drop operation by moving nodes from their current
     /// location to the target location.
@@ -268,6 +285,57 @@ public sealed partial class MainWindowViewModel : ObservableObject
         }
 
         return null;
+    }
+
+    private void RebuildMenuItems()
+    {
+        var items = new[]
+        {
+            new MenuItem(
+                new MenuItemId("TestHost.Menu.File"),
+                MenuItemKind.Submenu,
+                new MenuItemSemanticMetadata(new ToolbarItemText("_File")),
+                children:
+                [
+                    new MenuItem(
+                        new MenuItemId("TestHost.Menu.File.Exit"),
+                        MenuItemKind.Command,
+                        new MenuItemSemanticMetadata(new ToolbarItemText("Exit")),
+                        command: ExitMenuCommand),
+                ]),
+
+            new MenuItem(
+                new MenuItemId("TestHost.Menu.View"),
+                MenuItemKind.Submenu,
+                new MenuItemSemanticMetadata(new ToolbarItemText("_View")),
+                children:
+                [
+                    new MenuItem(
+                        new MenuItemId("TestHost.Menu.View.Dummy"),
+                        MenuItemKind.Command,
+                        new MenuItemSemanticMetadata(
+                            new ToolbarItemText("Dummy Item", "Cycles the shared selection mode command.")),
+                        shortcut: new MenuShortcut(MenuShortcutModifiers.Ctrl, MenuShortcutKey.D),
+                        command: ToggleSelectionModeCommand),
+                ]),
+
+            new MenuItem(
+                new MenuItemId("TestHost.Menu.Help"),
+                MenuItemKind.Submenu,
+                new MenuItemSemanticMetadata(new ToolbarItemText("_Help")),
+                children:
+                [
+                    new MenuItem(
+                        new MenuItemId("TestHost.Menu.Help.About"),
+                        MenuItemKind.Command,
+                        new MenuItemSemanticMetadata(new ToolbarItemText("About")),
+                        command: AboutMenuCommand),
+                ]),
+        };
+
+        MainMenuItems.Clear();
+        foreach (var item in items)
+            MainMenuItems.Add(item);
     }
 
     private void RebuildToolbarItems()
