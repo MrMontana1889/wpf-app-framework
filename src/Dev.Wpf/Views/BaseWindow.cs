@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Bentley Systems, Incorporated. All Rights Reserved.
 
 using Dev.Core.Services;
+using Dev.Wpf.Behaviors;
 using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using System.Windows.Input;
@@ -21,6 +22,7 @@ public class BaseWindow : Window
         SetResourceReference(BackgroundProperty, "WindowBackgroundBrush");
         SetResourceReference(ForegroundProperty, "TextBrush");
         SetResourceReference(IconProperty, "AppIcon");
+        MenuShortcutBehavior.SetIsEnabled(this, true);
 
         Loaded += OnLoaded;
         Closing += OnClosing;
