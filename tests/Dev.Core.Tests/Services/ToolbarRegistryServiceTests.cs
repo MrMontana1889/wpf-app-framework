@@ -295,4 +295,60 @@ public class ToolbarRegistryServiceTests
 
         Assert.That(_service.IsVisible(toolbarId), Is.True);
     }
+
+    // --- VisibilityChanged Event ---
+
+    [Test]
+    public void SetVisibility_RaisesVisibilityChangedEvent()
+    {
+        var toolbarId = new ToolbarId("Build");
+        _service.RegisterDefinition(new ToolbarDefinition(toolbarId, "Build", defaultVisible: true));
+
+        var eventRaised = false;
+        var capturedArgs = (ToolbarVisibilityChangedEventArgs?)null;
+        _service.VisibilityChanged += (sender, e) =>
+        {
+            if (e.ToolbarId == toolbarId)
+            {
+                eventRaised = true;
+                capturedArgs = e;
+            }
+        };
+
+        _service.SetVisibility(toolbarId, isVisible: false);
+
+        Assert.That(eventRaised, Is.True);
+        Assert.That(capturedArgs?.IsVisible, Is.False);
+    }
+
+    [Test]
+    public void SetVisibility_SameVisibility_DoesNotRaiseEvent()
+    {
+        var toolbarId = new ToolbarId("Build");
+        _service.RegisterDefinition(new ToolbarDefinition(toolbarId, "Build", defaultVisible: true));
+
+        var eventRaised = false;
+        _service.VisibilityChanged += (sender, e) =>
+        {
+            if (e.ToolbarId == toolbarId)
+                eventRaised = true;
+        };
+
+        // Set to same value as default
+        _service.SetVisibility(toolbarId, isVisible: true);
+
+        Assert.That(eventRaised, Is.False);
+    }
+
+    [Test]
+    public void RegisterDefinition_DoesNotRaiseVisibilityChangedEvent()
+    {
+        var toolbarId = new ToolbarId("Build");
+        var eventRaised = false;
+        _service.VisibilityChanged += (sender, e) => eventRaised = true;
+
+        _service.RegisterDefinition(new ToolbarDefinition(toolbarId, "Build", defaultVisible: true));
+
+        Assert.That(eventRaised, Is.False);
+    }
 }

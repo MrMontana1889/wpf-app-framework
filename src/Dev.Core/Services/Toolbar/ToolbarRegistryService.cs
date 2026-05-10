@@ -21,6 +21,8 @@ public class ToolbarRegistryService : IToolbarRegistryService
     private readonly Dictionary<ToolbarId, List<ToolbarModel>> _toolbarsById = new();
     private Dictionary<string, bool> _persistedVisibilityData = new(StringComparer.Ordinal);
 
+    public event EventHandler<ToolbarVisibilityChangedEventArgs>? VisibilityChanged;
+
     public IReadOnlyList<ToolbarModel> Toolbars => _toolbars.AsReadOnly();
 
     public IReadOnlyList<ToolbarDefinition> ToolbarDefinitions => _definitions.AsReadOnly();
@@ -70,6 +72,7 @@ public class ToolbarRegistryService : IToolbarRegistryService
         _visibilityById[toolbarId] = effectiveVisibility;
         ApplyVisibilityToRegisteredToolbars(toolbarId);
         SaveVisibility();
+        VisibilityChanged?.Invoke(this, new ToolbarVisibilityChangedEventArgs(toolbarId, effectiveVisibility));
     }
 
     public void Register(ToolbarModel toolbar, bool canHide = true)

@@ -13,6 +13,11 @@ namespace Dev.Core.Services;
 public interface IToolbarRegistryService
 {
     /// <summary>
+    /// Raised when a toolbar's visibility changes after registration.
+    /// </summary>
+    event EventHandler<ToolbarVisibilityChangedEventArgs>? VisibilityChanged;
+
+    /// <summary>
     /// The ordered list of toolbars that have been registered with the service.
     /// </summary>
     IReadOnlyList<ToolbarModel> Toolbars { get; }
