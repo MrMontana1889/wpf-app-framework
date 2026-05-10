@@ -3,8 +3,10 @@
 
 using Dev.Core.Toolbar;
 using System.Collections;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 
 namespace Dev.Wpf.Controls;
 
@@ -31,7 +33,7 @@ public sealed class ToolbarHostControl : Control
             nameof(ItemsSource),
             typeof(IEnumerable),
             typeof(ToolbarHostControl),
-            new FrameworkPropertyMetadata(null));
+            new FrameworkPropertyMetadata(null, OnItemsSourceChanged));
 
     public static readonly DependencyProperty IconProviderProperty =
         DependencyProperty.Register(
@@ -39,6 +41,22 @@ public sealed class ToolbarHostControl : Control
             typeof(IIconProvider),
             typeof(ToolbarHostControl),
             new FrameworkPropertyMetadata(null, OnIconProviderChanged));
+
+    private static void OnItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (e.NewValue is null)
+            return;
+
+        var view = CollectionViewSource.GetDefaultView(e.NewValue);
+        if (view is null)
+            return;
+
+        using (view.DeferRefresh())
+        {
+            view.SortDescriptions.Clear();
+            view.SortDescriptions.Add(new SortDescription(nameof(ToolbarItem.Order), ListSortDirection.Ascending));
+        }
+    }
 
     private static void OnIconProviderChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {

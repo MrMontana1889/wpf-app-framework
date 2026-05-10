@@ -86,9 +86,9 @@
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Border
+                        Padding="{TemplateBinding Padding}"
                         Background="{TemplateBinding Background}"
-                        BorderThickness="0"
-                        Padding="{TemplateBinding Padding}">
+                        BorderThickness="0">
                         <ContentPresenter
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
@@ -175,7 +175,7 @@
                     <ControlTemplate.Resources>
                         <converters:BoolToVisibilityConverter x:Key="ToolbarBoolToVisibilityConverter" />
                         <converters:ToolbarDisplayIntentToVisibilityConverter x:Key="ToolbarDisplayIntentToVisibilityConverter" />
-                        <converters:ToolbarItemsOrderConverter x:Key="ToolbarItemsOrderConverter" />
+                        <converters:ToolbarItemLabelConverter x:Key="ToolbarItemLabelConverter" />
                         <converters:IconKeyToImageSourceConverter x:Key="ToolbarIconKeyToImageSourceConverter" />
 
                         <DataTemplate x:Key="ToolbarButtonTemplate" DataType="{x:Type toolbarCore:ToolbarItem}">
@@ -195,7 +195,7 @@
                                     </Image>
                                     <TextBlock
                                         Margin="4,0,0,0"
-                                        Text="{Binding SemanticMetadata.Text.Label}"
+                                        Text="{Binding Converter={StaticResource ToolbarItemLabelConverter}}"
                                         Visibility="{Binding DisplayIntent, Converter={StaticResource ToolbarDisplayIntentToVisibilityConverter}, ConverterParameter=Text}" />
                                 </StackPanel>
                             </Button>
@@ -264,6 +264,7 @@
                                 </Image>
                                 <TextBlock
                                     Margin="4,0,0,0"
+                                    VerticalAlignment="Center"
                                     Text="{Binding SemanticMetadata.Text.Label}"
                                     Visibility="{Binding DisplayIntent, Converter={StaticResource ToolbarDisplayIntentToVisibilityConverter}, ConverterParameter=Text}" />
                             </StackPanel>
@@ -296,7 +297,7 @@
                         <ToolBar Background="{TemplateBinding Background}" Foreground="{TemplateBinding Foreground}">
                             <ItemsControl
                                 ItemTemplateSelector="{StaticResource ToolbarItemTemplateSelector}"
-                                ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ToolbarItemsOrderConverter}}">
+                                ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource TemplatedParent}}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <StackPanel Orientation="Horizontal" />

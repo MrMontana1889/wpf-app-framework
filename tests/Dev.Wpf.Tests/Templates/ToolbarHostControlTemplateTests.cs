@@ -4,6 +4,7 @@
 using Dev.Core.Toolbar;
 using Dev.Wpf.Controls;
 using NUnit.Framework;
+using System.Collections.ObjectModel;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -84,6 +85,50 @@ public sealed class ToolbarHostControlTemplateTests
 
         Assert.That(image, Is.Not.Null);
         Assert.That(image!.Source, Is.SameAs(expectedIcon));
+    }
+
+    [Test]
+    public void ButtonProjection_ReplacedItems_RefreshesLabelText()
+    {
+        var items = new ObservableCollection<ToolbarItem>
+        {
+            new(
+                new ToolbarItemId("Selection.Cycle"),
+                ToolbarItemKind.Button,
+                new ToolbarItemSemanticMetadata(new ToolbarItemText("Selection: Single")),
+                ToolbarItemDisplayIntent.TextOnly,
+                command: new TestCommand())
+        };
+
+        var control = new ToolbarHostControl
+        {
+            ItemsSource = items,
+        };
+
+        using var host = new TemplateTestHost(control);
+
+        var initialButton = TemplateTestHost.FindChild<Button>(control);
+        var initialText = TemplateTestHost.FindChild<TextBlock>(initialButton!);
+
+        Assert.That(initialText, Is.Not.Null);
+        Assert.That(initialText!.Text, Is.EqualTo("Selection: Single"));
+
+        items.Clear();
+        items.Add(
+            new ToolbarItem(
+                new ToolbarItemId("Selection.Cycle"),
+                ToolbarItemKind.Button,
+                new ToolbarItemSemanticMetadata(new ToolbarItemText("Selection: Multiple")),
+                ToolbarItemDisplayIntent.TextOnly,
+                command: new TestCommand()));
+
+        control.UpdateLayout();
+
+        var updatedButton = TemplateTestHost.FindChild<Button>(control);
+        var updatedText = TemplateTestHost.FindChild<TextBlock>(updatedButton!);
+
+        Assert.That(updatedText, Is.Not.Null);
+        Assert.That(updatedText!.Text, Is.EqualTo("Selection: Multiple"));
     }
 
     private sealed class StubIconProvider : IIconProvider
