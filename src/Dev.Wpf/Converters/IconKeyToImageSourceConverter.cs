@@ -1,6 +1,7 @@
 // IconKeyToImageSourceConverter.cs
 // Copyright (c) 2026 Bentley Systems, Incorporated. All Rights Reserved.
 
+using Dev.Core.Toolbar;
 using Dev.Wpf.Controls;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -20,7 +21,14 @@ public sealed class IconKeyToImageSourceConverter : IMultiValueConverter
         if (values.Length < 2)
             return null;
 
-        if (values[0] is not string iconKey || string.IsNullOrWhiteSpace(iconKey))
+        var iconKey = values[0] switch
+        {
+            string key when !string.IsNullOrWhiteSpace(key) => key,
+            IconKey key => key.Value,
+            _ => null,
+        };
+
+        if (string.IsNullOrWhiteSpace(iconKey))
             return null;
 
         if (values[1] is not IIconProvider iconProvider)

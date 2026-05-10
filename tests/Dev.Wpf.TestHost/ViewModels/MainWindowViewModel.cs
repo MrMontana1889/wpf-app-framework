@@ -3,12 +3,12 @@
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Dev.Core.Menu;
 using Dev.Core.Services;
+using Dev.Core.Toolbar;
 using Dev.Core.Tree;
 using Dev.Wpf.Controls;
-using Dev.Wpf.Services;
 using Dev.Wpf.TestHost.Samples;
-using Dev.Wpf.Themes;
 using System.Collections.ObjectModel;
 
 namespace Dev.Wpf.TestHost.ViewModels;
@@ -27,6 +27,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
         // Apply default light theme on startup
         // In BBApp.Next this would delegate to IThemeService via DI
         _themeService = themeService;
+        IsDarkTheme = true;
+
+        RebuildMenuItems();
+        RebuildToolbarItems();
     }
 
     private IThemeService ThemeService => _themeService;
@@ -41,6 +45,23 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     /// <summary>Context menu provider wired to the tree.</summary>
     public SampleContextMenuProvider ContextMenuProvider { get; } = new();
+
+    /// <summary>
+    /// Semantic toolbar composition projected by <c>ToolbarHostControl</c>.
+    /// </summary>
+    public ObservableCollection<MenuItem> MainMenuItems { get; } = [];
+
+    /// <summary>
+    /// Semantic toolbar composition projected by <c>ToolbarHostControl</c>.
+    /// </summary>
+    public ObservableCollection<ToolbarItem> PrimaryToolbarItems { get; } = [];
+
+    public ObservableCollection<ToolbarItem> SecondaryToolbarItems { get; } = [];
+
+    /// <summary>
+    /// Diagnostic combo-box choices for toolbar projection validation.
+    /// </summary>
+    public IReadOnlyList<object> ToolbarChoices { get; } = ["Choice 1", "Choice 2", "Choice 3"];
 
     // -----------------------------------------------------------------------
     // Feature toggles (bound to toolbar ToggleButtons)
@@ -62,6 +83,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(SelectionModeLabel))]
     private TreeSelectionMode selectionMode = TreeSelectionMode.Single;
 
+    [ObservableProperty]
+    private bool toolbarOptionA;
+
+    [ObservableProperty]
+    private object? toolbarChoice = "Choice 1";
+
     /// <summary>
     /// Placeholder dark-theme flag. Phase D will replace this with a full
     /// <c>ThemedIconProvider</c> / ResourceDictionary swap.
@@ -75,7 +102,19 @@ public sealed partial class MainWindowViewModel : ObservableObject
         // In BBApp.Next this would delegate to IThemeService
         var theme = value ? "Dark" : "Light";
         ThemeService.ApplyTheme(theme);
+
+        RebuildToolbarItems();
     }
+
+    partial void OnShowCheckboxesChanged(bool value) => RebuildToolbarItems();
+
+    partial void OnCanDragDropChanged(bool value) => RebuildToolbarItems();
+
+    partial void OnSelectionModeChanged(TreeSelectionMode value) => RebuildToolbarItems();
+
+    partial void OnToolbarOptionAChanged(bool value) => RebuildToolbarItems();
+
+    partial void OnToolbarChoiceChanged(object? value) => RebuildToolbarItems();
 
     // -----------------------------------------------------------------------
     // Status (updated by MainWindow code-behind when SelectedNodes changes)
@@ -131,6 +170,28 @@ public sealed partial class MainWindowViewModel : ObservableObject
             TreeSelectionMode.Multiple => TreeSelectionMode.None,
             _                          => TreeSelectionMode.Single,
         };
+    }
+
+    [RelayCommand]
+    private void ToggleShowCheckboxes() => ShowCheckboxes = !ShowCheckboxes;
+
+    [RelayCommand]
+    private void ToggleCanDragDrop() => CanDragDrop = !CanDragDrop;
+
+    [RelayCommand]
+    private void ToggleDarkTheme() => IsDarkTheme = !IsDarkTheme;
+
+    [RelayCommand]
+    private void ToggleToolbarOptionA() => ToolbarOptionA = !ToolbarOptionA;
+
+    [RelayCommand]
+    private static void ExitMenu()
+    {
+    }
+
+    [RelayCommand]
+    private static void AboutMenu()
+    {
     }
 
     /// <summary>
@@ -224,5 +285,179 @@ public sealed partial class MainWindowViewModel : ObservableObject
         }
 
         return null;
+    }
+
+    private void RebuildMenuItems()
+    {
+        var items = new[]
+        {
+            new MenuItem(
+                new MenuItemId("TestHost.Menu.File"),
+                MenuItemKind.Submenu,
+                new MenuItemSemanticMetadata(new ToolbarItemText("_File")),
+                children:
+                [
+                    new MenuItem(
+                        new MenuItemId("TestHost.Menu.File.Exit"),
+                        MenuItemKind.Command,
+                        new MenuItemSemanticMetadata(new ToolbarItemText("Exit")),
+                        command: ExitMenuCommand),
+                ]),
+
+            new MenuItem(
+                new MenuItemId("TestHost.Menu.View"),
+                MenuItemKind.Submenu,
+                new MenuItemSemanticMetadata(new ToolbarItemText("_View")),
+                children:
+                [
+                    new MenuItem(
+                        new MenuItemId("TestHost.Menu.View.Dummy"),
+                        MenuItemKind.Command,
+                        new MenuItemSemanticMetadata(
+                            new ToolbarItemText("Dummy Item", "Cycles the shared selection mode command.")),
+                        shortcut: new MenuShortcut(MenuShortcutModifiers.Ctrl, MenuShortcutKey.D),
+                        command: ToggleSelectionModeCommand),
+                ]),
+
+            new MenuItem(
+                new MenuItemId("TestHost.Menu.Help"),
+                MenuItemKind.Submenu,
+                new MenuItemSemanticMetadata(new ToolbarItemText("_Help")),
+                children:
+                [
+                    new MenuItem(
+                        new MenuItemId("TestHost.Menu.Help.About"),
+                        MenuItemKind.Command,
+                        new MenuItemSemanticMetadata(new ToolbarItemText("About")),
+                        command: AboutMenuCommand),
+                ]),
+        };
+
+        MainMenuItems.Clear();
+        foreach (var item in items)
+            MainMenuItems.Add(item);
+    }
+
+    private void RebuildToolbarItems()
+    {
+        var items = new[]
+        {
+            new ToolbarItem(
+                new ToolbarItemId("TestHost.Toolbar.SelectionLabel"),
+                ToolbarItemKind.Label,
+                new ToolbarItemSemanticMetadata(new ToolbarItemText("Selection:")),
+                ToolbarItemDisplayIntent.TextOnly,
+                order: 10),
+
+            new ToolbarItem(
+                new ToolbarItemId("TestHost.Toolbar.SelectionCycle"),
+                ToolbarItemKind.Button,
+                new ToolbarItemSemanticMetadata(
+                    new ToolbarItemText(
+                        SelectionModeLabel,
+                        "Click to cycle: Single -> Multiple -> None -> Single")),
+                ToolbarItemDisplayIntent.TextOnly,
+                order: 20,
+                command: ToggleSelectionModeCommand),
+
+            new ToolbarItem(
+                new ToolbarItemId("TestHost.Toolbar.Separator1"),
+                ToolbarItemKind.Separator,
+                new ToolbarItemSemanticMetadata(new ToolbarItemText("Separator")),
+                ToolbarItemDisplayIntent.TextOnly,
+                order: 30),
+
+            new ToolbarItem(
+                new ToolbarItemId("TestHost.Toolbar.ShowCheckboxes"),
+                ToolbarItemKind.ToggleButton,
+                new ToolbarItemSemanticMetadata(
+                    new ToolbarItemText(
+                        "Checkboxes",
+                        "Show or hide tri-state checkboxes on each node")),
+                ToolbarItemDisplayIntent.TextOnly,
+                order: 40,
+                command: ToggleShowCheckboxesCommand,
+                isChecked: ShowCheckboxes),
+
+            new ToolbarItem(
+                new ToolbarItemId("TestHost.Toolbar.Separator2"),
+                ToolbarItemKind.Separator,
+                new ToolbarItemSemanticMetadata(new ToolbarItemText("Separator")),
+                ToolbarItemDisplayIntent.TextOnly,
+                order: 50),
+
+            new ToolbarItem(
+                new ToolbarItemId("TestHost.Toolbar.DragDrop"),
+                ToolbarItemKind.ToggleButton,
+                new ToolbarItemSemanticMetadata(
+                    new ToolbarItemText(
+                        "Drag & Drop",
+                        "Enable or disable drag-and-drop reordering")),
+                ToolbarItemDisplayIntent.TextOnly,
+                order: 60,
+                command: ToggleCanDragDropCommand,
+                isChecked: CanDragDrop),
+
+            new ToolbarItem(
+                new ToolbarItemId("TestHost.Toolbar.Separator3"),
+                ToolbarItemKind.Separator,
+                new ToolbarItemSemanticMetadata(new ToolbarItemText("Separator")),
+                ToolbarItemDisplayIntent.TextOnly,
+                order: 70),
+
+            new ToolbarItem(
+                new ToolbarItemId("TestHost.Toolbar.DarkTheme"),
+                ToolbarItemKind.ToggleButton,
+                new ToolbarItemSemanticMetadata(
+                    new ToolbarItemText(
+                        "Dark Theme",
+                        "Placeholder dark-theme toggle")),
+                ToolbarItemDisplayIntent.TextOnly,
+                order: 80,
+                command: ToggleDarkThemeCommand,
+                isChecked: IsDarkTheme),
+        };
+
+        PrimaryToolbarItems.Clear();
+        foreach (var item in items)
+            PrimaryToolbarItems.Add(item);
+
+        var items2 = new[]
+        {
+            new ToolbarItem(
+                new ToolbarItemId("TestHost.Toolbar.OptionA"),
+                ToolbarItemKind.CheckBox,
+                new ToolbarItemSemanticMetadata(
+                    new ToolbarItemText(
+                        "Option A",
+                        "Test CheckBox in ToolBar")),
+                ToolbarItemDisplayIntent.TextOnly,
+                order: 100,
+                command: ToggleToolbarOptionACommand,
+                isChecked: ToolbarOptionA),
+
+            new ToolbarItem(
+                new ToolbarItemId("TestHost.Toolbar.Separator5"),
+                ToolbarItemKind.Separator,
+                new ToolbarItemSemanticMetadata(new ToolbarItemText("Separator")),
+                ToolbarItemDisplayIntent.TextOnly,
+                order: 110),
+
+            new ToolbarItem(
+                new ToolbarItemId("TestHost.Toolbar.Choices"),
+                ToolbarItemKind.ComboBox,
+                new ToolbarItemSemanticMetadata(
+                    new ToolbarItemText(
+                        "Choices",
+                        "Test ComboBox in ToolBar")),
+                ToolbarItemDisplayIntent.TextOnly,
+                order: 120,
+                selectionItems: ToolbarChoices,
+                selectedValue: ToolbarChoice),
+        };
+
+        SecondaryToolbarItems.Clear();
+        foreach (var item in items2)
+            SecondaryToolbarItems.Add(item);
     }
 }
