@@ -606,8 +606,6 @@
                                     Grid.Column="2"
                                     Width="16"
                                     Height="16"
-                                    MinWidth="0"
-                                    MaxWidth="0"
                                     Margin="2,0"
                                     HorizontalAlignment="Left"
                                     VerticalAlignment="Center" />
