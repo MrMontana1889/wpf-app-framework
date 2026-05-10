@@ -20,4 +20,13 @@
     <ProjectReference Include="..\..\src\Dev.Wpf\Dev.Wpf.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Resource Include="Resources\Icons\file-pdf.ico" />
+    <Resource Include="Resources\Icons\file-text.ico" />
+    <Resource Include="Resources\Icons\file.ico" />
+    <Resource Include="Resources\Icons\folder-project.ico" />
+    <Resource Include="Resources\Icons\folder.ico" />
+    <Resource Include="Resources\Icons\settings.ico" />
+  </ItemGroup>
+
 </Project>

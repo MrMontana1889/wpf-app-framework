@@ -87,6 +87,7 @@
                 x:Name="SampleTreeView"
                 CanDragDrop="{Binding CanDragDrop}"
                 ContextMenuProvider="{Binding ContextMenuProvider}"
+                IconProvider="{Binding IconProvider}"
                 ItemsSource="{Binding RootNodes}"
                 SelectionMode="{Binding SelectionMode}"
                 ShowCheckboxes="{Binding ShowCheckboxes}">

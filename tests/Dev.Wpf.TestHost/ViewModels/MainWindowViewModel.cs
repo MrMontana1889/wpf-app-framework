@@ -29,11 +29,15 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _themeService = themeService;
         IsDarkTheme = true;
 
+        IconProvider = new PackUriIconProvider("Dev.Wpf.TestHost", "Resources/Icons");
+
         RebuildMenuItems();
         RebuildToolbarItems();
     }
 
     private IThemeService ThemeService => _themeService;
+
+    public IIconProvider IconProvider { get; }
 
     // -----------------------------------------------------------------------
     // Sample data and providers (never change at runtime)
