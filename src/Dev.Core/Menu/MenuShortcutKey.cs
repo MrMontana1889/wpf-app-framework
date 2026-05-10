@@ -1,0 +1,53 @@
+// MenuShortcutKey.cs
+// Copyright (c) 2026 MrMontana1889.  See LICENSE
+
+namespace Dev.Core.Menu;
+
+/// <summary>
+/// Semantic keys for menu shortcuts.
+/// </summary>
+public enum MenuShortcutKey
+{
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    G,
+    H,
+    I,
+    J,
+    K,
+    L,
+    M,
+    N,
+    O,
+    P,
+    Q,
+    R,
+    S,
+    T,
+    U,
+    V,
+    W,
+    X,
+    Y,
+    Z,
+    F1,
+    F2,
+    F3,
+    F4,
+    F5,
+    F6,
+    F7,
+    F8,
+    F9,
+    F10,
+    F11,
+    F12,
+    Enter,
+    Escape,
+    Delete,
+    Backspace,
+}
