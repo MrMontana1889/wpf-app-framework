@@ -1,6 +1,14 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!--  =============================================  -->
+    <!--  CheckBoxes  -->
+    <!--  =============================================  -->
+    <Style BasedOn="{StaticResource {x:Type CheckBox}}" TargetType="CheckBox">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+    </Style>
+
+    <!--  =============================================  -->
     <!--  Buttons  -->
     <!--  =============================================  -->
     <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="Button">
