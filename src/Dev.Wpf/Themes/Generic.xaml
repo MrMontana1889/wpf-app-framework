@@ -1,7 +1,9 @@
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls="clr-namespace:Dev.Wpf.Controls">
+    xmlns:controls="clr-namespace:Dev.Wpf.Controls"
+    xmlns:converters="clr-namespace:Dev.Wpf.Converters"
+    xmlns:toolbarCore="clr-namespace:Dev.Core.Toolbar;assembly=Dev.Core">
 
     <!--  Default (design-time) style for WinFormsButton.  -->
     <!--  At runtime this is superseded by WinFormsButtonStyle.{theme}.xaml loaded by ThemeManager.  -->
@@ -154,6 +156,158 @@
         <Setter Property="Background" Value="{DynamicResource SeparatorBrush}" />
         <Setter Property="Height" Value="1" />
         <Setter Property="Margin" Value="0,2" />
+    </Style>
+
+    <!--
+        ═══════════════════════════════════════════════════════════════════
+        ToolbarHostControl — Phase 2 (Core ToolbarItem projection)
+        ═══════════════════════════════════════════════════════════════════
+        Projects Dev.Core toolbar item data into native WPF controls using
+        built-in DataTemplates. Consumers bind ItemsSource to ToolbarItem data
+        and do not need to author custom templates for baseline usage.
+    -->
+    <Style TargetType="{x:Type controls:ToolbarHostControl}">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource ControlForegroundBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type controls:ToolbarHostControl}">
+                    <ControlTemplate.Resources>
+                        <converters:BoolToVisibilityConverter x:Key="ToolbarBoolToVisibilityConverter" />
+                        <converters:ToolbarDisplayIntentToVisibilityConverter x:Key="ToolbarDisplayIntentToVisibilityConverter" />
+                        <converters:ToolbarItemsOrderConverter x:Key="ToolbarItemsOrderConverter" />
+                        <converters:IconKeyToImageSourceConverter x:Key="ToolbarIconKeyToImageSourceConverter" />
+
+                        <DataTemplate x:Key="ToolbarButtonTemplate" DataType="{x:Type toolbarCore:ToolbarItem}">
+                            <Button
+                                Command="{Binding Command}"
+                                IsEnabled="{Binding IsEnabled}"
+                                ToolTip="{Binding SemanticMetadata.Text.AssistiveText}"
+                                Visibility="{Binding IsVisible, Converter={StaticResource ToolbarBoolToVisibilityConverter}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Visibility="{Binding DisplayIntent, Converter={StaticResource ToolbarDisplayIntentToVisibilityConverter}, ConverterParameter=Icon}">
+                                        <Image.Source>
+                                            <MultiBinding Converter="{StaticResource ToolbarIconKeyToImageSourceConverter}">
+                                                <Binding Path="SemanticMetadata.IconKey" />
+                                                <Binding Path="IconProvider" RelativeSource="{RelativeSource AncestorType=controls:ToolbarHostControl}" />
+                                            </MultiBinding>
+                                        </Image.Source>
+                                    </Image>
+                                    <TextBlock
+                                        Margin="4,0,0,0"
+                                        Text="{Binding SemanticMetadata.Text.Label}"
+                                        Visibility="{Binding DisplayIntent, Converter={StaticResource ToolbarDisplayIntentToVisibilityConverter}, ConverterParameter=Text}" />
+                                </StackPanel>
+                            </Button>
+                        </DataTemplate>
+
+                        <DataTemplate x:Key="ToolbarToggleButtonTemplate" DataType="{x:Type toolbarCore:ToolbarItem}">
+                            <ToggleButton
+                                Command="{Binding Command}"
+                                IsChecked="{Binding IsChecked, Mode=OneWay}"
+                                IsEnabled="{Binding IsEnabled}"
+                                ToolTip="{Binding SemanticMetadata.Text.AssistiveText}"
+                                Visibility="{Binding IsVisible, Converter={StaticResource ToolbarBoolToVisibilityConverter}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Visibility="{Binding DisplayIntent, Converter={StaticResource ToolbarDisplayIntentToVisibilityConverter}, ConverterParameter=Icon}">
+                                        <Image.Source>
+                                            <MultiBinding Converter="{StaticResource ToolbarIconKeyToImageSourceConverter}">
+                                                <Binding Path="SemanticMetadata.IconKey" />
+                                                <Binding Path="IconProvider" RelativeSource="{RelativeSource AncestorType=controls:ToolbarHostControl}" />
+                                            </MultiBinding>
+                                        </Image.Source>
+                                    </Image>
+                                    <TextBlock
+                                        Margin="4,0,0,0"
+                                        Text="{Binding SemanticMetadata.Text.Label}"
+                                        Visibility="{Binding DisplayIntent, Converter={StaticResource ToolbarDisplayIntentToVisibilityConverter}, ConverterParameter=Text}" />
+                                </StackPanel>
+                            </ToggleButton>
+                        </DataTemplate>
+
+                        <DataTemplate x:Key="ToolbarCheckBoxTemplate" DataType="{x:Type toolbarCore:ToolbarItem}">
+                            <CheckBox
+                                IsChecked="{Binding IsChecked, Mode=OneWay}"
+                                IsEnabled="{Binding IsEnabled}"
+                                ToolTip="{Binding SemanticMetadata.Text.AssistiveText}"
+                                Visibility="{Binding IsVisible, Converter={StaticResource ToolbarBoolToVisibilityConverter}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Visibility="{Binding DisplayIntent, Converter={StaticResource ToolbarDisplayIntentToVisibilityConverter}, ConverterParameter=Icon}">
+                                        <Image.Source>
+                                            <MultiBinding Converter="{StaticResource ToolbarIconKeyToImageSourceConverter}">
+                                                <Binding Path="SemanticMetadata.IconKey" />
+                                                <Binding Path="IconProvider" RelativeSource="{RelativeSource AncestorType=controls:ToolbarHostControl}" />
+                                            </MultiBinding>
+                                        </Image.Source>
+                                    </Image>
+                                    <TextBlock
+                                        Margin="4,0,0,0"
+                                        Text="{Binding SemanticMetadata.Text.Label}"
+                                        Visibility="{Binding DisplayIntent, Converter={StaticResource ToolbarDisplayIntentToVisibilityConverter}, ConverterParameter=Text}" />
+                                </StackPanel>
+                            </CheckBox>
+                        </DataTemplate>
+
+                        <DataTemplate x:Key="ToolbarLabelTemplate" DataType="{x:Type toolbarCore:ToolbarItem}">
+                            <StackPanel
+                                IsEnabled="{Binding IsEnabled}"
+                                Orientation="Horizontal"
+                                ToolTip="{Binding SemanticMetadata.Text.AssistiveText}"
+                                Visibility="{Binding IsVisible, Converter={StaticResource ToolbarBoolToVisibilityConverter}}">
+                                <Image Visibility="{Binding DisplayIntent, Converter={StaticResource ToolbarDisplayIntentToVisibilityConverter}, ConverterParameter=Icon}">
+                                    <Image.Source>
+                                        <MultiBinding Converter="{StaticResource ToolbarIconKeyToImageSourceConverter}">
+                                            <Binding Path="SemanticMetadata.IconKey" />
+                                            <Binding Path="IconProvider" RelativeSource="{RelativeSource AncestorType=controls:ToolbarHostControl}" />
+                                        </MultiBinding>
+                                    </Image.Source>
+                                </Image>
+                                <TextBlock
+                                    Margin="4,0,0,0"
+                                    Text="{Binding SemanticMetadata.Text.Label}"
+                                    Visibility="{Binding DisplayIntent, Converter={StaticResource ToolbarDisplayIntentToVisibilityConverter}, ConverterParameter=Text}" />
+                            </StackPanel>
+                        </DataTemplate>
+
+                        <DataTemplate x:Key="ToolbarComboBoxTemplate" DataType="{x:Type toolbarCore:ToolbarItem}">
+                            <ComboBox
+                                IsEnabled="{Binding IsEnabled}"
+                                ItemsSource="{Binding SelectionItems}"
+                                SelectedItem="{Binding SelectedValue, Mode=OneWay}"
+                                ToolTip="{Binding SemanticMetadata.Text.AssistiveText}"
+                                Visibility="{Binding IsVisible, Converter={StaticResource ToolbarBoolToVisibilityConverter}}" />
+                        </DataTemplate>
+
+                        <DataTemplate x:Key="ToolbarSeparatorTemplate" DataType="{x:Type toolbarCore:ToolbarItem}">
+                            <Separator Visibility="{Binding IsVisible, Converter={StaticResource ToolbarBoolToVisibilityConverter}}" />
+                        </DataTemplate>
+
+                        <controls:ToolbarItemTemplateSelector
+                            x:Key="ToolbarItemTemplateSelector"
+                            ButtonTemplate="{StaticResource ToolbarButtonTemplate}"
+                            CheckBoxTemplate="{StaticResource ToolbarCheckBoxTemplate}"
+                            ComboBoxTemplate="{StaticResource ToolbarComboBoxTemplate}"
+                            LabelTemplate="{StaticResource ToolbarLabelTemplate}"
+                            SeparatorTemplate="{StaticResource ToolbarSeparatorTemplate}"
+                            ToggleButtonTemplate="{StaticResource ToolbarToggleButtonTemplate}" />
+                    </ControlTemplate.Resources>
+
+                    <ToolBarTray Background="{TemplateBinding Background}">
+                        <ToolBar Background="{TemplateBinding Background}" Foreground="{TemplateBinding Foreground}">
+                            <ItemsControl
+                                ItemTemplateSelector="{StaticResource ToolbarItemTemplateSelector}"
+                                ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ToolbarItemsOrderConverter}}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                        </ToolBar>
+                    </ToolBarTray>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!--
