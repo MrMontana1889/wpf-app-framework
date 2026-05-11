@@ -86,6 +86,8 @@ public sealed class ToolbarItem
             throw new ArgumentException("Selected value must exist in the combo box item source.", nameof(selectedValue));
 
         SelectedValue = selectedValue;
+
+        Command?.Execute(selectedValue);
     }
 
     private static void ValidateKindConfiguration(
@@ -140,9 +142,6 @@ public sealed class ToolbarItem
                 break;
 
             case ToolbarItemKind.ComboBox:
-                if (command is not null)
-                    throw new ArgumentException("ComboBox items do not support command association.", nameof(command));
-
                 if (isChecked is not null)
                     throw new ArgumentException("ComboBox items do not support checked state.", nameof(isChecked));
 

@@ -93,6 +93,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private object? toolbarChoice = "Choice 1";
 
+    [RelayCommand]
+    private void SetToolbarChoice(object? value)
+    {
+        ToolbarChoice = value;
+    }
+
     /// <summary>
     /// Placeholder dark-theme flag. Phase D will replace this with a full
     /// <c>ThemedIconProvider</c> / ResourceDictionary swap.
@@ -457,7 +463,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 ToolbarItemDisplayIntent.TextOnly,
                 order: 120,
                 selectionItems: ToolbarChoices,
-                selectedValue: ToolbarChoice),
+                selectedValue: ToolbarChoice,
+                command: SetToolbarChoiceCommand),
         };
 
         SecondaryToolbarItems.Clear();
