@@ -278,7 +278,7 @@
                     </ControlTemplate.Resources>
 
                     <Border Background="{TemplateBinding Background}">
-                        <ToolBarTray Background="{TemplateBinding Background}">
+                        <ToolBarTray x:Name="PART_ToolBarTray" Background="{TemplateBinding Background}">
                             <ToolBar x:Name="PART_ToolBar" Background="{TemplateBinding Background}" Foreground="{TemplateBinding Foreground}">
                                 <ItemsControl ItemTemplateSelector="{StaticResource ToolbarItemTemplateSelector}" ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource TemplatedParent}}">
                                     <ItemsControl.ItemsPanel>

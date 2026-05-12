@@ -38,6 +38,135 @@ public sealed class ToolbarHostControlTemplateTests
     }
 
     [Test]
+    public void GroupedProjection_Disabled_RendersSingleToolBar()
+    {
+        var items = new[]
+        {
+            CreateButtonItem("Build.Null1", order: 0, tooltip: "null-1", logicalGroup: null),
+            CreateButtonItem("Build.A1", order: 1, tooltip: "a-1", logicalGroup: "A"),
+            CreateButtonItem("Build.Null2", order: 2, tooltip: "null-2", logicalGroup: null),
+            CreateButtonItem("Build.B1", order: 3, tooltip: "b-1", logicalGroup: "B")
+        };
+
+        var control = new ToolbarHostControl
+        {
+            EnableGroupedToolbarProjection = false,
+            ItemsSource = items
+        };
+
+        using var host = new TemplateTestHost(control);
+
+        var toolbars = TemplateTestHost.FindAllChildren<ToolBar>(control).ToList();
+        Assert.That(toolbars, Has.Count.EqualTo(1));
+
+        var buttonTooltips = TemplateTestHost.FindAllChildren<Button>(toolbars[0])
+            .Select(button => button.ToolTip)
+            .Cast<string>()
+            .ToList();
+
+        Assert.That(buttonTooltips, Is.EqualTo(new[] { "null-1", "a-1", "null-2", "b-1" }));
+    }
+
+    [Test]
+    public void GroupedProjection_Enabled_PartitionsByLogicalGroup_WithNullGroup()
+    {
+        var items = new[]
+        {
+            CreateButtonItem("Build.Null1", order: 0, tooltip: "null-1", logicalGroup: null),
+            CreateButtonItem("Build.A1", order: 1, tooltip: "a-1", logicalGroup: "A"),
+            CreateButtonItem("Build.Null2", order: 2, tooltip: "null-2", logicalGroup: null),
+            CreateButtonItem("Build.A2", order: 3, tooltip: "a-2", logicalGroup: "A"),
+            CreateButtonItem("Build.B1", order: 4, tooltip: "b-1", logicalGroup: "B")
+        };
+
+        var control = new ToolbarHostControl
+        {
+            EnableGroupedToolbarProjection = true,
+            ItemsSource = items
+        };
+
+        using var host = new TemplateTestHost(control);
+
+        var toolbars = TemplateTestHost.FindAllChildren<ToolBar>(control).ToList();
+        Assert.That(toolbars, Has.Count.EqualTo(3));
+
+        var firstGroup = TemplateTestHost.FindAllChildren<Button>(toolbars[0]).Select(button => button.ToolTip).Cast<string>().ToList();
+        var secondGroup = TemplateTestHost.FindAllChildren<Button>(toolbars[1]).Select(button => button.ToolTip).Cast<string>().ToList();
+        var thirdGroup = TemplateTestHost.FindAllChildren<Button>(toolbars[2]).Select(button => button.ToolTip).Cast<string>().ToList();
+
+        Assert.That(firstGroup, Is.EqualTo(new[] { "null-1", "null-2" }));
+        Assert.That(secondGroup, Is.EqualTo(new[] { "a-1", "a-2" }));
+        Assert.That(thirdGroup, Is.EqualTo(new[] { "b-1" }));
+    }
+
+    [Test]
+    public void GroupedProjection_Enabled_WithSingleLogicalGroup_RendersSingleToolBar()
+    {
+        var items = new[]
+        {
+            CreateButtonItem("Build.One", order: 0, tooltip: "one", logicalGroup: "A"),
+            CreateButtonItem("Build.Two", order: 1, tooltip: "two", logicalGroup: "A")
+        };
+
+        var control = new ToolbarHostControl
+        {
+            EnableGroupedToolbarProjection = true,
+            ItemsSource = items
+        };
+
+        using var host = new TemplateTestHost(control);
+
+        var toolbars = TemplateTestHost.FindAllChildren<ToolBar>(control).ToList();
+        Assert.That(toolbars, Has.Count.EqualTo(1));
+    }
+
+    [Test]
+    public void GroupedProjection_Enabled_OmitsEmptyGroupsAfterRegistryVisibilityFiltering()
+    {
+        var appDataPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(appDataPath);
+
+        try
+        {
+            var registry = new ToolbarRegistryService(appDataPath);
+            var toolbarId = new ToolbarId("Build");
+            var itemA = new ToolbarItemId("Build.A");
+            var itemB = new ToolbarItemId("Build.B");
+            registry.RegisterDefinition(new ToolbarDefinition(toolbarId, "Build", itemIds: [itemA, itemB]));
+            registry.SetItemVisibility(toolbarId, itemB, false);
+
+            var control = new ToolbarHostControl
+            {
+                EnableGroupedToolbarProjection = true,
+                ToolbarRegistry = registry,
+                ToolbarId = toolbarId,
+                ItemsSource = new[]
+                {
+                    CreateButtonItem(itemA.Value, order: 0, tooltip: "a", logicalGroup: "A"),
+                    CreateButtonItem(itemB.Value, order: 1, tooltip: "b", logicalGroup: "B")
+                }
+            };
+
+            using var host = new TemplateTestHost(control);
+
+            var toolbars = TemplateTestHost.FindAllChildren<ToolBar>(control).ToList();
+            Assert.That(toolbars, Has.Count.EqualTo(1));
+
+            var buttonTooltips = TemplateTestHost.FindAllChildren<Button>(toolbars[0])
+                .Select(button => button.ToolTip)
+                .Cast<string>()
+                .ToList();
+
+            Assert.That(buttonTooltips, Is.EqualTo(new[] { "a" }));
+        }
+        finally
+        {
+            if (Directory.Exists(appDataPath))
+                Directory.Delete(appDataPath, true);
+        }
+    }
+
+    [Test]
     public void ButtonProjection_BindsVisibilityAndEnablement()
     {
         var item = new ToolbarItem(
@@ -734,6 +863,18 @@ public sealed class ToolbarHostControlTemplateTests
         public bool CanExecute(object? parameter) => true;
 
         public void Execute(object? parameter) { }
+    }
+
+    private static ToolbarItem CreateButtonItem(string id, int order, string tooltip, string? logicalGroup)
+    {
+        return new ToolbarItem(
+            new ToolbarItemId(id),
+            ToolbarItemKind.Button,
+            new ToolbarItemSemanticMetadata(new ToolbarItemText(id, tooltip)),
+            ToolbarItemDisplayIntent.TextOnly,
+            order: order,
+            command: new TestCommand(),
+            logicalGroup: logicalGroup);
     }
 
     private static bool OpenToolbarContextMenu(ToolbarHostControl control, DependencyObject originalSource)
