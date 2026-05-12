@@ -21,10 +21,9 @@
 
     <DockPanel LastChildFill="True">
 
-        <controls:MenuHostControl DockPanel.Dock="Top" ItemsSource="{Binding MainMenuItems}" />
-
-        <controls:ToolbarHostControl DockPanel.Dock="Top" ItemsSource="{Binding PrimaryToolbarItems}" />
-        <controls:ToolbarHostControl DockPanel.Dock="Top" ItemsSource="{Binding SecondaryToolbarItems}" />
+        <controls:MenuHostControl MenuBarId="{Binding MenuBarId}" DockPanel.Dock="Top" ItemsSource="{Binding MainMenuItems}" />
+        <controls:ToolbarHostControl MenuBarId="{Binding MenuBarId}" ToolbarId="{Binding PrimaryToolbarId}" ToolbarRegistry="{Binding ToolbarRegistry}" DockPanel.Dock="Top" ItemsSource="{Binding PrimaryToolbarItems}" />
+        <controls:ToolbarHostControl MenuBarId="{Binding MenuBarId}" ToolbarId="{Binding SecondaryToolbarId}" ToolbarRegistry="{Binding ToolbarRegistry}" DockPanel.Dock="Top" ItemsSource="{Binding SecondaryToolbarItems}" />
 
         <!--
             ================================================================

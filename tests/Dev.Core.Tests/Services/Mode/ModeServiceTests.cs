@@ -3,8 +3,7 @@
 
 using Dev.Core.Services;
 using Dev.Core.Services.Mode;
-using Dev.Core.ViewModels.Controls;
-using NSubstitute;
+using Dev.Core.Toolbar;
 using NUnit.Framework;
 
 namespace Dev.Core.Tests.Services.Mode;
@@ -13,21 +12,16 @@ namespace Dev.Core.Tests.Services.Mode;
 public class ModeServiceTests
 {
     private ModeService _service = null!;
+    private string _testDirectory = null!;
 
     // -------------------------------------------------------------------------
     // Test doubles
     // -------------------------------------------------------------------------
 
-    private sealed class StubToolbarModel : ToolbarModel
-    {
-        public StubToolbarModel() : base(Substitute.For<IDialogService>()) { }
-        public override string Name => "StubToolbar";
-    }
-
     private sealed class StubFeatureMode : IFeatureMode
     {
         public string ModeId { get; }
-        public ToolbarModel? PrimaryToolbar { get; }
+        public ToolbarId? PrimaryToolbarId { get; }
         public int EnterCount { get; private set; }
         public int ExitCount { get; private set; }
         public int ApplyCount { get; private set; }
@@ -44,10 +38,10 @@ public class ModeServiceTests
         /// </summary>
         public bool StateCommitted { get; private set; }
 
-        public StubFeatureMode(string modeId, ToolbarModel? primaryToolbar = null)
+        public StubFeatureMode(string modeId, ToolbarId? primaryToolbarId = null)
         {
             ModeId = modeId;
-            PrimaryToolbar = primaryToolbar;
+            PrimaryToolbarId = primaryToolbarId;
         }
 
         public void OnEnter() => EnterCount++;
@@ -71,8 +65,19 @@ public class ModeServiceTests
     [SetUp]
     public void SetUp()
     {
+        _testDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(_testDirectory);
         _service = new ModeService();
     }
+
+    [TearDown]
+    public void TearDown()
+    {
+        if (Directory.Exists(_testDirectory))
+            Directory.Delete(_testDirectory, true);
+    }
+
+    private ToolbarRegistryService CreateRegistry() => new(_testDirectory);
 
     // =========================================================================
     // Baseline mode switching
@@ -296,31 +301,36 @@ public class ModeServiceTests
     [Test]
     public void EnterFeatureMode_WithPrimaryToolbar_MakesToolbarVisible()
     {
-        var toolbar = new StubToolbarModel();
-        toolbar.IsToolbarVisible = false;
-        var mode = new StubFeatureMode("TestMode", toolbar);
+        var registry = CreateRegistry();
+        var toolbarId = new ToolbarId("Primary");
+        registry.RegisterDefinition(new ToolbarDefinition(toolbarId, "Primary", defaultVisible: false));
+        var service = new ModeService(registry);
+        var mode = new StubFeatureMode("TestMode", primaryToolbarId: toolbarId);
 
-        _service.EnterFeatureMode(mode);
+        service.EnterFeatureMode(mode);
 
-        Assert.That(toolbar.IsToolbarVisible, Is.True);
+        Assert.That(registry.IsVisible(toolbarId), Is.True);
     }
 
     [Test]
     public void ExitFeatureMode_WithPrimaryToolbar_HidesToolbar()
     {
-        var toolbar = new StubToolbarModel();
-        var mode = new StubFeatureMode("TestMode", toolbar);
-        _service.EnterFeatureMode(mode);
+        var registry = CreateRegistry();
+        var toolbarId = new ToolbarId("Primary");
+        registry.RegisterDefinition(new ToolbarDefinition(toolbarId, "Primary", defaultVisible: true));
+        var service = new ModeService(registry);
+        var mode = new StubFeatureMode("TestMode", primaryToolbarId: toolbarId);
+        service.EnterFeatureMode(mode);
 
-        _service.ExitFeatureMode();
+        service.ExitFeatureMode();
 
-        Assert.That(toolbar.IsToolbarVisible, Is.False);
+        Assert.That(registry.IsVisible(toolbarId), Is.False);
     }
 
     [Test]
     public void EnterFeatureMode_WithNoPrimaryToolbar_DoesNotThrow()
     {
-        var mode = new StubFeatureMode("TestMode", primaryToolbar: null);
+        var mode = new StubFeatureMode("TestMode", primaryToolbarId: null);
 
         Assert.DoesNotThrow(() => _service.EnterFeatureMode(mode));
     }
@@ -585,13 +595,16 @@ public class ModeServiceTests
     [Test]
     public async Task TryApplyAndExitFeatureModeAsync_OnSuccess_HidesPrimaryToolbar()
     {
-        var toolbar = new StubToolbarModel();
-        var mode = new StubFeatureMode("TestMode", toolbar) { ApplyResult = true };
-        _service.EnterFeatureMode(mode);
+        var registry = CreateRegistry();
+        var toolbarId = new ToolbarId("Primary");
+        registry.RegisterDefinition(new ToolbarDefinition(toolbarId, "Primary", defaultVisible: true));
+        var service = new ModeService(registry);
+        var mode = new StubFeatureMode("TestMode", primaryToolbarId: toolbarId) { ApplyResult = true };
+        service.EnterFeatureMode(mode);
 
-        await _service.TryApplyAndExitFeatureModeAsync();
+        await service.TryApplyAndExitFeatureModeAsync();
 
-        Assert.That(toolbar.IsToolbarVisible, Is.False);
+        Assert.That(registry.IsVisible(toolbarId), Is.False);
     }
 
     // =========================================================================
@@ -673,13 +686,16 @@ public class ModeServiceTests
     [Test]
     public void CancelAndExitFeatureMode_HidesPrimaryToolbar()
     {
-        var toolbar = new StubToolbarModel();
-        var mode = new StubFeatureMode("TestMode", toolbar);
-        _service.EnterFeatureMode(mode);
+        var registry = CreateRegistry();
+        var toolbarId = new ToolbarId("Primary");
+        registry.RegisterDefinition(new ToolbarDefinition(toolbarId, "Primary", defaultVisible: true));
+        var service = new ModeService(registry);
+        var mode = new StubFeatureMode("TestMode", primaryToolbarId: toolbarId);
+        service.EnterFeatureMode(mode);
 
-        _service.CancelAndExitFeatureMode();
+        service.CancelAndExitFeatureMode();
 
-        Assert.That(toolbar.IsToolbarVisible, Is.False);
+        Assert.That(registry.IsVisible(toolbarId), Is.False);
     }
 
     [Test]

@@ -277,17 +277,19 @@
                             ToggleButtonTemplate="{StaticResource ToolbarToggleButtonTemplate}" />
                     </ControlTemplate.Resources>
 
-                    <ToolBarTray Background="{TemplateBinding Background}">
-                        <ToolBar Background="{TemplateBinding Background}" Foreground="{TemplateBinding Foreground}">
-                            <ItemsControl ItemTemplateSelector="{StaticResource ToolbarItemTemplateSelector}" ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource TemplatedParent}}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                            </ItemsControl>
-                        </ToolBar>
-                    </ToolBarTray>
+                    <Border Background="{TemplateBinding Background}">
+                        <ToolBarTray Background="{TemplateBinding Background}">
+                            <ToolBar x:Name="PART_ToolBar" Background="{TemplateBinding Background}" Foreground="{TemplateBinding Foreground}">
+                                <ItemsControl ItemTemplateSelector="{StaticResource ToolbarItemTemplateSelector}" ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource TemplatedParent}}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                            </ToolBar>
+                        </ToolBarTray>
+                    </Border>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

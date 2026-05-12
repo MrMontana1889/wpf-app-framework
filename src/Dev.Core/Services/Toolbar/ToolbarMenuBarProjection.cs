@@ -1,35 +1,44 @@
 // ToolbarMenuBarProjection.cs
 // Copyright (c) 2026 MrMontana1889.  See LICENSE
 
+using Dev.Core.Toolbar;
 using Dev.Core.ViewModels.Controls;
 
 namespace Dev.Core.Services;
 
 /// <summary>
-/// Projects registered toolbar metadata into a shell menu bar model.
+/// Projects registered semantic toolbar definitions and items into a shell menu bar model.
 /// </summary>
 public static class ToolbarMenuBarProjection
 {
-    public static IReadOnlyList<MenuBarMenuModel> Project(IReadOnlyList<ToolbarModel> toolbars)
+    public static IReadOnlyList<MenuBarMenuModel> Project(
+        IReadOnlyList<ToolbarDefinition> definitions,
+        IEnumerable<ToolbarItem> items)
     {
-        ArgumentNullException.ThrowIfNull(toolbars);
+        ArgumentNullException.ThrowIfNull(definitions);
+        ArgumentNullException.ThrowIfNull(items);
 
-        var menus = new List<MenuBarMenuModel>(toolbars.Count);
+        var itemsById = items.ToDictionary(i => i.Id);
+        var menus = new List<MenuBarMenuModel>(definitions.Count);
 
-        foreach (var toolbar in toolbars)
+        foreach (var definition in definitions)
         {
-            var menuItems = ProjectToolbarItems(toolbar);
-            menus.Add(new MenuBarMenuModel(toolbar.Name, menuItems));
+            var menuItems = ProjectToolbarItems(definition, itemsById);
+            menus.Add(new MenuBarMenuModel(definition.DisplayName, menuItems));
         }
 
         return menus;
     }
 
-    private static IReadOnlyList<MenuBarEntryModel> ProjectToolbarItems(ToolbarModel toolbar)
+    private static IReadOnlyList<MenuBarEntryModel> ProjectToolbarItems(
+        ToolbarDefinition definition,
+        Dictionary<ToolbarItemId, ToolbarItem> itemsById)
     {
-        var eligibleItems = toolbar.Items
-            .OfType<ToolbarItemModel>()
-            .Where(item => item.IncludeInMenuBar)
+        var eligibleItems = definition.ItemIds
+            .Where(itemId => itemsById.TryGetValue(itemId, out var item)
+                && item.IncludeInMenuBar
+                && item.Command is not null)
+            .Select(itemId => itemsById[itemId])
             .ToList();
 
         var result = new List<MenuBarEntryModel>(eligibleItems.Count);
@@ -45,7 +54,7 @@ public static class ToolbarMenuBarProjection
                 result.Add(new MenuBarSeparatorItemModel());
             }
 
-            result.Add(new MenuBarCommandItemModel(item.Label, item.Command));
+            result.Add(new MenuBarCommandItemModel(item.SemanticMetadata.Text.Label, item.Command!));
 
             previousGroup = item.LogicalGroup;
             hasProjectedItem = true;

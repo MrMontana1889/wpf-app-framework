@@ -2,6 +2,8 @@
 // Copyright (c) 2026 MrMontana1889.  See LICENSE
 
 using System.Windows.Input;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Dev.Core.Toolbar;
 
@@ -9,7 +11,7 @@ namespace Dev.Core.Toolbar;
 /// UI-agnostic Core model for a toolbar item.
 /// Composes identity, kind, semantic metadata, display intent, and lightweight state.
 /// </summary>
-public sealed class ToolbarItem
+public sealed class ToolbarItem : INotifyPropertyChanged
 {
     public ToolbarItemId Id { get; }
 
@@ -25,13 +27,75 @@ public sealed class ToolbarItem
 
     public IReadOnlyList<object>? SelectionItems { get; }
 
-    public bool IsVisible { get; set; }
+    private bool _isVisible;
+    public bool IsVisible
+    {
+        get => _isVisible;
+        set
+        {
+            if (_isVisible == value)
+                return;
 
-    public bool IsEnabled { get; set; }
+            _isVisible = value;
+            OnPropertyChanged();
+        }
+    }
 
-    public bool? IsChecked { get; private set; }
+    private bool _isEnabled;
+    public bool IsEnabled
+    {
+        get => _isEnabled;
+        set
+        {
+            if (_isEnabled == value)
+                return;
 
-    public object? SelectedValue { get; private set; }
+            _isEnabled = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private bool? _isChecked;
+    public bool? IsChecked
+    {
+        get => _isChecked;
+        private set
+        {
+            if (_isChecked == value)
+                return;
+
+            _isChecked = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private object? _selectedValue;
+    public object? SelectedValue
+    {
+        get => _selectedValue;
+        private set
+        {
+            if (Equals(_selectedValue, value))
+                return;
+
+            _selectedValue = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    /// <summary>
+    /// Whether this item should be projected into the shell menu bar.
+    /// Defaults to <c>true</c>. Set to <c>false</c> for toolbar-only items.
+    /// </summary>
+    public bool IncludeInMenuBar { get; }
+
+    /// <summary>
+    /// Optional logical group key used by menu projection to emit separators between groups.
+    /// Items with the same group key are contiguous; boundaries between groups get a separator.
+    /// </summary>
+    public string? LogicalGroup { get; }
 
     public ToolbarItem(
         ToolbarItemId id,
@@ -44,7 +108,9 @@ public sealed class ToolbarItem
         ICommand? command = null,
         bool? isChecked = null,
         IReadOnlyList<object>? selectionItems = null,
-        object? selectedValue = null)
+        object? selectedValue = null,
+        bool includeInMenuBar = true,
+        string? logicalGroup = null)
     {
         if (id.Value is null)
             throw new ArgumentException("Toolbar item id must be initialized.", nameof(id));
@@ -63,6 +129,8 @@ public sealed class ToolbarItem
         IsEnabled = isEnabled;
         IsChecked = isChecked;
         SelectedValue = selectedValue;
+        IncludeInMenuBar = includeInMenuBar;
+        LogicalGroup = logicalGroup;
 
         SelectionItems = selectionItems is null
             ? null
@@ -172,5 +240,10 @@ public sealed class ToolbarItem
             default:
                 throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unsupported toolbar item kind.");
         }
+    }
+
+    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }
