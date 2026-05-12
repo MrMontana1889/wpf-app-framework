@@ -2,29 +2,16 @@
 // Copyright (c) 2026 Bentley Systems, Incorporated. All Rights Reserved.
 
 using Dev.Core.Services;
-using Dev.Core.ViewModels.Controls;
-using NSubstitute;
+using Dev.Core.Toolbar;
 using NUnit.Framework;
 using System.Windows.Input;
+using Dev.Core.ViewModels.Controls;
 
 namespace Dev.Core.Tests.Services;
 
 [TestFixture]
 public class ToolbarMenuBarProjectionTests
 {
-    private IDialogService _dialogService = null!;
-
-    private sealed class TestToolbarModel : ToolbarModel
-    {
-        public override string Name { get; }
-
-        public TestToolbarModel(IDialogService dialogService, string name)
-            : base(dialogService)
-        {
-            Name = name;
-        }
-    }
-
     private sealed class TestCommand : ICommand
     {
         private bool _canExecute;
@@ -57,23 +44,34 @@ public class ToolbarMenuBarProjectionTests
         }
     }
 
-    [SetUp]
-    public void SetUp()
-    {
-        _dialogService = Substitute.For<IDialogService>();
-    }
+    private static ToolbarItem ButtonItem(string id, string label, ICommand? command = null, bool includeInMenuBar = true, string? logicalGroup = null) =>
+        new(
+            new ToolbarItemId(id),
+            ToolbarItemKind.Button,
+            new ToolbarItemSemanticMetadata(new ToolbarItemText(label)),
+            ToolbarItemDisplayIntent.IconAndText,
+            command: command ?? new TestCommand(),
+            includeInMenuBar: includeInMenuBar,
+            logicalGroup: logicalGroup);
 
     [Test]
     public void Project_CreatesOneTopLevelMenuPerToolbar_AndIncludesEligibleItems()
     {
-        var toolbarA = new TestToolbarModel(_dialogService, "Build");
-        toolbarA.Items.Add(new ToolbarItemModel(new TestCommand(), "Build", "Build"));
-        toolbarA.Items.Add(new ToolbarItemModel(new TestCommand(), "InternalOnly", "Internal", includeInMenuBar: false));
+        var buildItem = ButtonItem("build.cmd", "Build");
+        var internalItem = ButtonItem("internal.cmd", "Internal", includeInMenuBar: false);
+        var filterItem = ButtonItem("filter.cmd", "Filter");
 
-        var toolbarB = new TestToolbarModel(_dialogService, "Advanced");
-        toolbarB.Items.Add(new ToolbarItemModel(new TestCommand(), "Filter", "Filter"));
+        var toolbarA = new ToolbarDefinition(
+            new ToolbarId("Build"),
+            "Build",
+            itemIds: [buildItem.Id, internalItem.Id]);
 
-        var result = ToolbarMenuBarProjection.Project([toolbarA, toolbarB]);
+        var toolbarB = new ToolbarDefinition(
+            new ToolbarId("Advanced"),
+            "Advanced",
+            itemIds: [filterItem.Id]);
+
+        var result = ToolbarMenuBarProjection.Project([toolbarA, toolbarB], [buildItem, internalItem, filterItem]);
 
         Assert.Multiple(() =>
         {
@@ -88,12 +86,16 @@ public class ToolbarMenuBarProjectionTests
     [Test]
     public void Project_PreservesToolbarItemOrderInMenu()
     {
-        var toolbar = new TestToolbarModel(_dialogService, "Build");
-        toolbar.Items.Add(new ToolbarItemModel(new TestCommand(), "One", "One"));
-        toolbar.Items.Add(new ToolbarItemModel(new TestCommand(), "Two", "Two"));
-        toolbar.Items.Add(new ToolbarItemModel(new TestCommand(), "Three", "Three"));
+        var item1 = ButtonItem("one.cmd", "One");
+        var item2 = ButtonItem("two.cmd", "Two");
+        var item3 = ButtonItem("three.cmd", "Three");
 
-        var result = ToolbarMenuBarProjection.Project([toolbar]);
+        var toolbar = new ToolbarDefinition(
+            new ToolbarId("Build"),
+            "Build",
+            itemIds: [item1.Id, item2.Id, item3.Id]);
+
+        var result = ToolbarMenuBarProjection.Project([toolbar], [item1, item2, item3]);
 
         var labels = result[0].Items
             .OfType<MenuBarCommandItemModel>()
@@ -106,14 +108,18 @@ public class ToolbarMenuBarProjectionTests
     [Test]
     public void Project_InsertsSeparatorsOnLogicalGroupBoundaries_AndKeepsUngroupedContiguous()
     {
-        var toolbar = new TestToolbarModel(_dialogService, "Build");
-        toolbar.Items.Add(new ToolbarItemModel(new TestCommand(), "A", "A", logicalGroup: "G1"));
-        toolbar.Items.Add(new ToolbarItemModel(new TestCommand(), "B", "B", logicalGroup: "G1"));
-        toolbar.Items.Add(new ToolbarItemModel(new TestCommand(), "C", "C", logicalGroup: "G2"));
-        toolbar.Items.Add(new ToolbarItemModel(new TestCommand(), "D", "D"));
-        toolbar.Items.Add(new ToolbarItemModel(new TestCommand(), "E", "E"));
+        var itemA = ButtonItem("a.cmd", "A", logicalGroup: "G1");
+        var itemB = ButtonItem("b.cmd", "B", logicalGroup: "G1");
+        var itemC = ButtonItem("c.cmd", "C", logicalGroup: "G2");
+        var itemD = ButtonItem("d.cmd", "D");
+        var itemE = ButtonItem("e.cmd", "E");
 
-        var result = ToolbarMenuBarProjection.Project([toolbar]);
+        var toolbar = new ToolbarDefinition(
+            new ToolbarId("Build"),
+            "Build",
+            itemIds: [itemA.Id, itemB.Id, itemC.Id, itemD.Id, itemE.Id]);
+
+        var result = ToolbarMenuBarProjection.Project([toolbar], [itemA, itemB, itemC, itemD, itemE]);
         var menuItems = result[0].Items;
 
         Assert.Multiple(() =>
@@ -134,10 +140,13 @@ public class ToolbarMenuBarProjectionTests
         var command = new TestCommand();
         command.SetCanExecute(false);
 
-        var toolbar = new TestToolbarModel(_dialogService, "Build");
-        toolbar.Items.Add(new ToolbarItemModel(command, "Build", "Build"));
+        var item = ButtonItem("build.cmd", "Build", command: command);
+        var toolbar = new ToolbarDefinition(
+            new ToolbarId("Build"),
+            "Build",
+            itemIds: [item.Id]);
 
-        var result = ToolbarMenuBarProjection.Project([toolbar]);
+        var result = ToolbarMenuBarProjection.Project([toolbar], [item]);
         var projectedItem = result[0].Items.OfType<MenuBarCommandItemModel>().Single();
 
         Assert.That(projectedItem.Command, Is.SameAs(command));
@@ -146,5 +155,33 @@ public class ToolbarMenuBarProjectionTests
         command.SetCanExecute(true);
 
         Assert.That(projectedItem.Command.CanExecute(null), Is.True);
+    }
+
+    [Test]
+    public void Project_EmptyItemsList_ProducesMenuWithNoItems()
+    {
+        var toolbar = new ToolbarDefinition(new ToolbarId("Build"), "Build");
+
+        var result = ToolbarMenuBarProjection.Project([toolbar], []);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result, Has.Count.EqualTo(1));
+            Assert.That(result[0].Items, Is.Empty);
+        });
+    }
+
+    [Test]
+    public void Project_AllItemsExcluded_ProducesMenuWithNoItems()
+    {
+        var item = ButtonItem("a.cmd", "A", includeInMenuBar: false);
+        var toolbar = new ToolbarDefinition(
+            new ToolbarId("Build"),
+            "Build",
+            itemIds: [item.Id]);
+
+        var result = ToolbarMenuBarProjection.Project([toolbar], [item]);
+
+        Assert.That(result[0].Items, Is.Empty);
     }
 }

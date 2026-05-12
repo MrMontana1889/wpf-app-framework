@@ -1,6 +1,7 @@
 // ToolbarContextMenuConverter.cs
 // Copyright (c) 2026 Bentley Systems, Incorporated. All Rights Reserved.
 
+using Dev.Core.Toolbar;
 using Dev.Core.ViewModels.Controls;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -12,12 +13,10 @@ namespace Dev.Wpf.Converters;
 
 /// <summary>
 /// Builds the full item list for a toolbar context menu.
-/// Expects five bindings: MenuBarToggleEntry (MenuBarToggleMenuEntry),
-/// AllToolbars (IEnumerable&lt;ToolbarModel&gt;), CustomizeCommand (ICommand),
-/// and CanCustomize (bool).
-/// Returns a List&lt;object&gt; containing the menu bar toggle entry first,
-/// then all toolbar models, and — when CanCustomize is true — a Separator
-/// followed by a <see cref="ToolbarCustomizeMenuEntry"/>.
+/// Expects up to three bindings: AllToolbars (IEnumerable&lt;ToolbarDefinition&gt;),
+/// CustomizeCommand (ICommand), and CanCustomize (bool).
+/// Returns a List&lt;object&gt; containing all toolbar definitions, and — when
+/// CanCustomize is true — a Separator followed by a <see cref="ToolbarCustomizeMenuEntry"/>.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed class ToolbarContextMenuConverter : IMultiValueConverter
@@ -26,23 +25,16 @@ public sealed class ToolbarContextMenuConverter : IMultiValueConverter
     {
         var items = new List<object>();
 
-        // Add Menu Bar toggle as first item
-        if (values[0] is MenuBarToggleMenuEntry menuBarToggle)
+        // Add all toolbar definitions as toggleable entries
+        if (values[0] is IEnumerable<ToolbarDefinition> definitions)
         {
-            items.Add(menuBarToggle);
-            items.Add(new Separator());
-        }
-
-        // Add all toolbar toggles
-        if (values[1] is IEnumerable<ToolbarModel> toolbars)
-        {
-            foreach (var toolbar in toolbars)
-                items.Add(toolbar);
+            foreach (var definition in definitions)
+                items.Add(definition);
         }
 
         // Add customize entry if applicable
-        bool canCustomize = values.Length > 3 && values[3] is bool b && b;
-        if (canCustomize && values.Length > 2 && values[2] is ICommand customizeCommand)
+        bool canCustomize = values.Length > 2 && values[2] is bool b && b;
+        if (canCustomize && values.Length > 1 && values[1] is ICommand customizeCommand)
         {
             items.Add(new Separator());
             items.Add(new ToolbarCustomizeMenuEntry(customizeCommand));

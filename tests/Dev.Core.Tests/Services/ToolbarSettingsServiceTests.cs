@@ -2,10 +2,8 @@
 // Copyright (c) 2026 Bentley Systems, Incorporated. All Rights Reserved.
 
 using Dev.Core.Services;
-using Dev.Core.ViewModels.Controls;
-using NSubstitute;
+using Dev.Core.Toolbar;
 using NUnit.Framework;
-using System.Windows.Input;
 
 namespace Dev.Core.Tests.Services;
 
@@ -30,8 +28,14 @@ public class ToolbarSettingsServiceTests
             Directory.Delete(_testDirectory, true);
     }
 
-    private static ToolbarItemModel Item(string name, bool isVisible = true) =>
-        new(Substitute.For<ICommand>(), name, name) { IsVisible = isVisible };
+    private static ToolbarItem Item(string id, bool isVisible = true) =>
+        new(
+            new ToolbarItemId(id),
+            ToolbarItemKind.Button,
+            new ToolbarItemSemanticMetadata(new ToolbarItemText(id, null), null),
+            ToolbarItemDisplayIntent.IconAndText,
+            isVisible: isVisible,
+            command: new RelayCommandStub());
 
     // --- Persistence ---
 
@@ -39,8 +43,9 @@ public class ToolbarSettingsServiceTests
     public void Save_CreatesSettingsFile()
     {
         var items = new[] { Item("Build"), Item("Pull") };
+        var toolbarId = new ToolbarId("MyToolbar");
 
-        _service.Save("MyToolbar", items);
+        _service.Save(toolbarId, items);
 
         var path = Path.Combine(_testDirectory, "toolbar-settings.json");
         Assert.That(File.Exists(path), Is.True);
@@ -50,11 +55,12 @@ public class ToolbarSettingsServiceTests
     public void Save_ThenLoad_RestoresVisibility()
     {
         var saved = new[] { Item("Build", true), Item("Pull", false), Item("TMR", true) };
-        _service.Save("MyToolbar", saved);
+        var toolbarId = new ToolbarId("MyToolbar");
+        _service.Save(toolbarId, saved);
 
         var newService = new ToolbarSettingsService(_testDirectory);
         var loaded = new[] { Item("Build"), Item("Pull"), Item("TMR") };
-        newService.Load("MyToolbar", loaded);
+        newService.Load(toolbarId, loaded);
 
         Assert.Multiple(() =>
         {
@@ -69,7 +75,7 @@ public class ToolbarSettingsServiceTests
     {
         var items = new[] { Item("Build", true), Item("Pull", true) };
 
-        _service.Load("NonExistent", items);
+        _service.Load(new ToolbarId("NonExistent"), items);
 
         Assert.That(items.All(i => i.IsVisible), Is.True);
     }
@@ -78,11 +84,12 @@ public class ToolbarSettingsServiceTests
     public void Load_UnknownItem_LeavesOtherItemsUnchanged()
     {
         var saved = new[] { Item("Build", false) };
-        _service.Save("MyToolbar", saved);
+        var toolbarId = new ToolbarId("MyToolbar");
+        _service.Save(toolbarId, saved);
 
         var newService = new ToolbarSettingsService(_testDirectory);
         var loaded = new[] { Item("Build"), Item("NewButton", true) };
-        newService.Load("MyToolbar", loaded);
+        newService.Load(toolbarId, loaded);
 
         Assert.Multiple(() =>
         {
@@ -96,15 +103,15 @@ public class ToolbarSettingsServiceTests
     {
         var buildItems    = new[] { Item("Build", false) };
         var projectItems  = new[] { Item("New", true), Item("Open", false) };
-        _service.Save("Build",   buildItems);
-        _service.Save("Project", projectItems);
+        _service.Save(new ToolbarId("Build"),   buildItems);
+        _service.Save(new ToolbarId("Project"), projectItems);
 
         var newService = new ToolbarSettingsService(_testDirectory);
 
         var loadedBuild   = new[] { Item("Build") };
         var loadedProject = new[] { Item("New"), Item("Open") };
-        newService.Load("Build",   loadedBuild);
-        newService.Load("Project", loadedProject);
+        newService.Load(new ToolbarId("Build"),   loadedBuild);
+        newService.Load(new ToolbarId("Project"), loadedProject);
 
         Assert.Multiple(() =>
         {
@@ -112,5 +119,33 @@ public class ToolbarSettingsServiceTests
             Assert.That(loadedProject[0].IsVisible, Is.True);
             Assert.That(loadedProject[1].IsVisible, Is.False);
         });
+    }
+
+    // --- Semantic key (ToolbarItemId) ---
+
+    [Test]
+    public void Save_KeyedByToolbarItemId_NotLabel()
+    {
+        // Two items with same "label-like" value but different IDs
+        var itemA = Item("cmd.build", false);
+        var toolbarId = new ToolbarId("Build");
+        _service.Save(toolbarId, [itemA]);
+
+        var newService = new ToolbarSettingsService(_testDirectory);
+        var reloaded = new[] { Item("cmd.build") };
+        newService.Load(toolbarId, reloaded);
+
+        Assert.That(reloaded[0].IsVisible, Is.False);
+    }
+
+    // -------------------------------------------------------------------------
+    // Test doubles
+    // -------------------------------------------------------------------------
+
+    private sealed class RelayCommandStub : System.Windows.Input.ICommand
+    {
+        public event EventHandler? CanExecuteChanged { add { } remove { } }
+        public bool CanExecute(object? parameter) => true;
+        public void Execute(object? parameter) { }
     }
 }

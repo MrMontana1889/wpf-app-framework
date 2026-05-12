@@ -5,6 +5,7 @@ namespace Dev.Core.Toolbar;
 
 /// <summary>
 /// Immutable semantic definition for a toolbar.
+/// Carries the full item list alongside visibility metadata.
 /// </summary>
 public sealed class ToolbarDefinition
 {
@@ -16,7 +17,18 @@ public sealed class ToolbarDefinition
 
     public bool DefaultVisible { get; }
 
-    public ToolbarDefinition(ToolbarId id, string displayName, bool canHide = true, bool defaultVisible = true)
+    /// <summary>
+    /// The ordered list of semantic toolbar item IDs that belong to this toolbar.
+    /// Items are provided by the application via ItemsSource; this list is for metadata only.
+    /// </summary>
+    public IReadOnlyList<ToolbarItemId> ItemIds { get; }
+
+    public ToolbarDefinition(
+        ToolbarId id,
+        string displayName,
+        bool canHide = true,
+        bool defaultVisible = true,
+        IReadOnlyList<ToolbarItemId>? itemIds = null)
     {
         if (id == default)
             throw new ArgumentException("Toolbar id must be initialized.", nameof(id));
@@ -33,5 +45,6 @@ public sealed class ToolbarDefinition
         DisplayName = displayName;
         CanHide = canHide;
         DefaultVisible = defaultVisible;
+        ItemIds = itemIds is null ? [] : itemIds.ToArray();
     }
 }

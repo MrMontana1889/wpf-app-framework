@@ -3,7 +3,6 @@
 
 using Dev.Core.Services;
 using Dev.Core.ViewModels;
-using Dev.Core.ViewModels.Controls;
 using Dev.Wpf.Views;
 using Microsoft.Win32;
 using System.Diagnostics.CodeAnalysis;
@@ -20,18 +19,15 @@ public class DialogService : IDialogService
     private readonly IApplicationDescriptionService _appDescription;
     private readonly IVersionCheckService _versionCheckService;
     private readonly IWindowPersistenceService _windowPersistence;
-    private readonly IToolbarSettingsService _toolbarSettings;
 
     public DialogService(
         IApplicationDescriptionService appDescription,
         IVersionCheckService versionCheckService,
-        IWindowPersistenceService windowPersistence,
-        IToolbarSettingsService toolbarSettings)
+        IWindowPersistenceService windowPersistence)
     {
         _appDescription = appDescription;
         _versionCheckService = versionCheckService;
         _windowPersistence = windowPersistence;
-        _toolbarSettings = toolbarSettings;
     }
 
     public void ShowMessage(string title, string message)
@@ -116,12 +112,5 @@ public class DialogService : IDialogService
         var result = dialog.ShowDialog();
         folderPath = result == true ? dialog.FolderName : null;
         return result == true;
-    }
-
-    public void ShowCustomizeToolbarDialog(ToolbarModel toolbarModel)
-    {
-        var vm = new CustomizeToolbarViewModel(toolbarModel, _toolbarSettings);
-        var dialog = new CustomizeToolbarDialog(vm, _windowPersistence) { Owner = Application.Current.MainWindow };
-        dialog.ShowDialog();
     }
 }

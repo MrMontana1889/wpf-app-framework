@@ -14,8 +14,21 @@ namespace Dev.Core.Services.Mode;
 /// </remarks>
 public sealed class ModeService : IModeService
 {
+    private readonly IToolbarRegistryService? _toolbarRegistry;
     private BaselineMode _activeBaselineMode = BaselineMode.Simple;
     private IFeatureMode? _activeFeatureMode;
+
+    /// <summary>
+    /// Creates a new <see cref="ModeService"/>.
+    /// </summary>
+    /// <param name="toolbarRegistry">
+    /// Optional toolbar registry. When provided, <see cref="IFeatureMode.PrimaryToolbarId"/>
+    /// visibility is automatically set on enter/exit.
+    /// </param>
+    public ModeService(IToolbarRegistryService? toolbarRegistry = null)
+    {
+        _toolbarRegistry = toolbarRegistry;
+    }
 
     /// <inheritdoc/>
     public BaselineMode ActiveBaselineMode => _activeBaselineMode;
@@ -61,8 +74,8 @@ public sealed class ModeService : IModeService
 
         _activeFeatureMode = mode;
 
-        if (mode.PrimaryToolbar is not null)
-            mode.PrimaryToolbar.IsToolbarVisible = true;
+        if (mode.PrimaryToolbarId.HasValue)
+            _toolbarRegistry?.SetVisibility(mode.PrimaryToolbarId.Value, true);
 
         mode.OnEnter();
 
@@ -78,8 +91,8 @@ public sealed class ModeService : IModeService
         var exiting = _activeFeatureMode;
         _activeFeatureMode = null;
 
-        if (exiting.PrimaryToolbar is not null)
-            exiting.PrimaryToolbar.IsToolbarVisible = false;
+        if (exiting.PrimaryToolbarId.HasValue)
+            _toolbarRegistry?.SetVisibility(exiting.PrimaryToolbarId.Value, false);
 
         exiting.OnExit();
 

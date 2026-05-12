@@ -10,6 +10,7 @@ using Dev.Core.Tree;
 using Dev.Wpf.Controls;
 using Dev.Wpf.TestHost.Samples;
 using System.Collections.ObjectModel;
+using System.IO;
 
 namespace Dev.Wpf.TestHost.ViewModels;
 
@@ -21,12 +22,17 @@ namespace Dev.Wpf.TestHost.ViewModels;
 public sealed partial class MainWindowViewModel : ObservableObject
 {
     private readonly IThemeService _themeService;
+    private readonly IToolbarRegistryService _toolbarRegistry;
 
     public MainWindowViewModel(IThemeService themeService)
     {
         // Apply default light theme on startup
         // In BBApp.Next this would delegate to IThemeService via DI
         _themeService = themeService;
+
+        _toolbarRegistry = new ToolbarRegistryService(Path.GetTempPath());
+        ConfigureToolbarRegistry();
+
         IsDarkTheme = true;
 
         IconProvider = new PackUriIconProvider("Dev.Wpf.TestHost", "Resources/Icons");
@@ -37,6 +43,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     private IThemeService ThemeService => _themeService;
 
+    public ToolbarId PrimaryToolbarId => new ToolbarId("Primary");
+    public ToolbarId SecondaryToolbarId => new ToolbarId("Secondary");
+
+    public ToolbarId MenuBarId = new ToolbarId("MenuBar");
+    public ToolbarId MenuBarId2 = new ToolbarId("MenuBar2");
+
+    public IToolbarRegistryService ToolbarRegistry => _toolbarRegistry;
+
     public IIconProvider IconProvider { get; }
 
     // -----------------------------------------------------------------------
@@ -44,7 +58,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     // -----------------------------------------------------------------------
 
     /// <summary>Root nodes of the sample tree.</summary>
-    public ObservableCollection<TreeNodeModel> RootNodes { get; } = 
+    public ObservableCollection<TreeNodeModel> RootNodes { get; } =
         new ObservableCollection<TreeNodeModel>(SampleTreeBuilder.Build());
 
     /// <summary>Context menu provider wired to the tree.</summary>
@@ -58,9 +72,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
     /// <summary>
     /// Semantic toolbar composition projected by <c>ToolbarHostControl</c>.
     /// </summary>
-    public ObservableCollection<ToolbarItem> PrimaryToolbarItems { get; } = [];
+    public ObservableCollection<ToolbarItem> PrimaryToolbarItems { get; private set; } = [];
 
-    public ObservableCollection<ToolbarItem> SecondaryToolbarItems { get; } = [];
+    public ObservableCollection<ToolbarItem> SecondaryToolbarItems { get; private set; } = [];
 
     /// <summary>
     /// Diagnostic combo-box choices for toolbar projection validation.
@@ -158,10 +172,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
     /// <summary>Short label for the current selection mode, shown in the toolbar button.</summary>
     public string SelectionModeLabel => SelectionMode switch
     {
-        TreeSelectionMode.None     => "Selection: None",
-        TreeSelectionMode.Single   => "Selection: Single",
+        TreeSelectionMode.None => "Selection: None",
+        TreeSelectionMode.Single => "Selection: Single",
         TreeSelectionMode.Multiple => "Selection: Multiple",
-        _                          => "Selection: Single",
+        _ => "Selection: Single",
     };
 
     // -----------------------------------------------------------------------
@@ -176,9 +190,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         SelectionMode = SelectionMode switch
         {
-            TreeSelectionMode.Single   => TreeSelectionMode.Multiple,
+            TreeSelectionMode.Single => TreeSelectionMode.Multiple,
             TreeSelectionMode.Multiple => TreeSelectionMode.None,
-            _                          => TreeSelectionMode.Single,
+            _ => TreeSelectionMode.Single,
         };
     }
 
@@ -346,6 +360,39 @@ public sealed partial class MainWindowViewModel : ObservableObject
         MainMenuItems.Clear();
         foreach (var item in items)
             MainMenuItems.Add(item);
+
+        ToolbarRegistry.RegisterDefinition(new ToolbarDefinition(MenuBarId, "Menu Bar", true, true));
+    }
+
+    private void ConfigureToolbarRegistry()
+    {
+        var items = new[]
+        {
+            new ToolbarItemId("TestHost.Toolbar.SelectionLabel"),
+            new ToolbarItemId("TestHost.Toolbar.SelectionCycle"),
+            new ToolbarItemId("TestHost.Toolbar.Separator1"),
+            new ToolbarItemId("TestHost.Toolbar.ShowCheckboxes"),
+            new ToolbarItemId("TestHost.Toolbar.Separator2"),
+            new ToolbarItemId("TestHost.Toolbar.DragDrop"),
+            new ToolbarItemId("TestHost.Toolbar.Separator3"),
+            new ToolbarItemId("TestHost.Toolbar.DarkTheme"),
+        };
+
+        var items2 = new[]
+        {
+            new ToolbarItemId("TestHost.Toolbar.OptionA"),
+            new ToolbarItemId("TestHost.Toolbar.Separator5"),
+            new ToolbarItemId("TestHost.Toolbar.Choices"),
+        };
+
+        ToolbarRegistry.RegisterDefinition(new ToolbarDefinition(new ToolbarId("Primary"), "Primary", true, true, items));
+        ToolbarRegistry.RegisterDefinition(new ToolbarDefinition(new ToolbarId("Secondary"), "Secondary", false, true, items2));
+
+        foreach (var item in PrimaryToolbarItems)
+            ToolbarRegistry.SetItemVisibility(PrimaryToolbarId, item.Id, true);
+
+        foreach (var item in SecondaryToolbarItems)
+            ToolbarRegistry.SetItemVisibility(SecondaryToolbarId, item.Id, true);
     }
 
     private void RebuildToolbarItems()
@@ -468,7 +515,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         };
 
         SecondaryToolbarItems.Clear();
-        foreach (var item in items2)
+        foreach(var item in items2)
             SecondaryToolbarItems.Add(item);
+
     }
 }

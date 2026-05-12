@@ -1,7 +1,7 @@
 // IFeatureMode.cs
 // Copyright (c) 2026 MrMontana1889.  See LICENSE
 
-using Dev.Core.ViewModels.Controls;
+using Dev.Core.Toolbar;
 
 namespace Dev.Core.Services.Mode;
 
@@ -22,13 +22,14 @@ public interface IFeatureMode
     string ModeId { get; }
 
     /// <summary>
-    /// The primary mode-owned toolbar, representing the main action surface
-    /// for this feature mode (e.g., Save / Apply / Cancel equivalents in future phases).
-    /// When non-null, the shell must register this toolbar as non-hideable
-    /// (<c>canHide: false</c>). Mode state drives its visibility:
-    /// visible while this mode is active, hidden otherwise.
+    /// The stable semantic identity of the primary mode-owned toolbar, representing
+    /// the main action surface for this feature mode.
+    /// When non-null, the referenced toolbar definition must be registered in
+    /// <see cref="IToolbarRegistryService"/> with <c>canHide: false</c>.
+    /// The mode service drives its visibility: visible while this mode is active,
+    /// hidden otherwise.
     /// </summary>
-    ToolbarModel? PrimaryToolbar { get; }
+    ToolbarId? PrimaryToolbarId { get; }
 
     /// <summary>
     /// Invoked by <see cref="IModeService"/> immediately after the feature mode

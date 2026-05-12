@@ -1,13 +1,14 @@
 // ToolbarSettingsService.cs
 // Copyright (c) 2026 MrMontana1889.  See LICENSE
 
-using Dev.Core.ViewModels.Controls;
+using Dev.Core.Toolbar;
 using System.Text.Json;
 
 namespace Dev.Core.Services;
 
 /// <summary>
-/// Persists toolbar item visibility settings to a JSON file on disk.
+/// Persists toolbar item-level visibility settings to a JSON file on disk.
+/// Keyed by <see cref="ToolbarId"/> (outer) and <see cref="ToolbarItemId"/> (inner).
 /// </summary>
 public class ToolbarSettingsService : IToolbarSettingsService
 {
@@ -20,22 +21,22 @@ public class ToolbarSettingsService : IToolbarSettingsService
         LoadFromDisk();
     }
 
-    public void Save(string toolbarName, IEnumerable<ToolbarItemModel> items)
+    public void Save(ToolbarId toolbarId, IEnumerable<ToolbarItem> items)
     {
-        _data[toolbarName] = items
-            .Select(i => new ToolbarItemSettings { Name = i.Name, IsVisible = i.IsVisible })
+        _data[toolbarId.Value] = items
+            .Select(i => new ToolbarItemSettings { Name = i.Id.Value, IsVisible = i.IsVisible })
             .ToList();
         SaveToDisk();
     }
 
-    public void Load(string toolbarName, IEnumerable<ToolbarItemModel> items)
+    public void Load(ToolbarId toolbarId, IEnumerable<ToolbarItem> items)
     {
-        if (!_data.TryGetValue(toolbarName, out var saved))
+        if (!_data.TryGetValue(toolbarId.Value, out var saved))
             return;
 
         foreach (var item in items)
         {
-            var entry = saved.FirstOrDefault(s => s.Name == item.Name);
+            var entry = saved.FirstOrDefault(s => s.Name == item.Id.Value);
             if (entry is not null)
                 item.IsVisible = entry.IsVisible;
         }
