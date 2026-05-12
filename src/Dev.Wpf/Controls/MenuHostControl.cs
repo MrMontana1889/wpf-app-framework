@@ -3,12 +3,16 @@
 
 using CoreMenuItem = Dev.Core.Menu.MenuItem;
 using Dev.Core.Menu;
+using Dev.Core.Services;
+using Dev.Core.Toolbar;
 using Dev.Wpf.Converters;
 using System.Collections;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Media;
 
 namespace Dev.Wpf.Controls;
 
@@ -22,6 +26,8 @@ public sealed class MenuHostControl : Control
     private readonly BoolToVisibilityConverter _boolToVisibilityConverter = new();
     private readonly IconKeyToImageSourceConverter _iconConverter = new();
     private readonly MenuShortcutToTextConverter _shortcutConverter = new();
+    private IToolbarRegistryService? _currentRegistry;
+    private EventHandler<ToolbarVisibilityChangedEventArgs>? _visibilityChangedHandler;
 
     static MenuHostControl()
     {
@@ -34,6 +40,9 @@ public sealed class MenuHostControl : Control
     {
         SetValue(ProjectedItemsPropertyKey, _projectedItems);
         SetCurrentValue(IconProviderProperty, new ApplicationResourceIconProvider());
+
+        Loaded += (_, _) => AttachRegistryVisibilityBinding();
+        Unloaded += (_, _) => DetachRegistryVisibilityBinding();
     }
 
     public static readonly DependencyProperty ItemsSourceProperty =
@@ -49,6 +58,20 @@ public sealed class MenuHostControl : Control
             typeof(IIconProvider),
             typeof(MenuHostControl),
             new FrameworkPropertyMetadata(null, OnIconProviderChanged));
+
+    public static readonly DependencyProperty ToolbarRegistryProperty =
+        DependencyProperty.Register(
+            nameof(ToolbarRegistry),
+            typeof(IToolbarRegistryService),
+            typeof(MenuHostControl),
+            new FrameworkPropertyMetadata(null, OnToolbarRegistryChanged));
+
+    public static readonly DependencyProperty MenuBarIdProperty =
+        DependencyProperty.Register(
+            nameof(MenuBarId),
+            typeof(ToolbarId),
+            typeof(MenuHostControl),
+            new FrameworkPropertyMetadata(new ToolbarId("MenuBar"), OnMenuBarIdChanged));
 
     private static readonly DependencyPropertyKey ProjectedItemsPropertyKey =
         DependencyProperty.RegisterReadOnly(
@@ -74,6 +97,16 @@ public sealed class MenuHostControl : Control
         control.RebuildProjectedItems();
     }
 
+    private static void OnToolbarRegistryChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        ((MenuHostControl)d).AttachRegistryVisibilityBinding();
+    }
+
+    private static void OnMenuBarIdChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        ((MenuHostControl)d).UpdateRegistryVisibility();
+    }
+
     /// <summary>
     /// Semantic menu items to project into native WPF menu controls.
     /// </summary>
@@ -93,9 +126,89 @@ public sealed class MenuHostControl : Control
     }
 
     /// <summary>
+    /// Optional registry used to project the Menu Bar row visibility.
+    /// If not provided explicitly, the control attempts to discover one from the loaded tree.
+    /// </summary>
+    public IToolbarRegistryService? ToolbarRegistry
+    {
+        get => (IToolbarRegistryService?)GetValue(ToolbarRegistryProperty);
+        set => SetValue(ToolbarRegistryProperty, value);
+    }
+
+    /// <summary>
+    /// Semantic id of the Menu Bar definition whose visibility controls this menu host.
+    /// Defaults to the conventional MenuBar id.
+    /// </summary>
+    public ToolbarId MenuBarId
+    {
+        get => (ToolbarId)GetValue(MenuBarIdProperty);
+        set => SetValue(MenuBarIdProperty, value);
+    }
+
+    /// <summary>
     /// Internal projected WPF item collection rendered by the control template.
     /// </summary>
     public IEnumerable ProjectedItems => (IEnumerable)GetValue(ProjectedItemsProperty);
+
+    private void AttachRegistryVisibilityBinding()
+    {
+        DetachRegistryVisibilityBinding();
+
+        var registry = ToolbarRegistry ?? DiscoverRegistryFromVisualTree();
+        if (registry is null)
+        {
+            ClearValue(VisibilityProperty);
+            return;
+        }
+
+        _visibilityChangedHandler = (_, e) =>
+        {
+            if (e.ToolbarId == MenuBarId)
+                UpdateMenuBarVisibility(registry);
+        };
+
+        registry.VisibilityChanged += _visibilityChangedHandler;
+        _currentRegistry = registry;
+
+        UpdateMenuBarVisibility(registry);
+    }
+
+    private void DetachRegistryVisibilityBinding()
+    {
+        if (_currentRegistry is not null && _visibilityChangedHandler is not null)
+            _currentRegistry.VisibilityChanged -= _visibilityChangedHandler;
+
+        _currentRegistry = null;
+        _visibilityChangedHandler = null;
+    }
+
+    private void UpdateRegistryVisibility()
+    {
+        if (_currentRegistry is not null)
+            UpdateMenuBarVisibility(_currentRegistry);
+    }
+
+    private void UpdateMenuBarVisibility(IToolbarRegistryService registry)
+    {
+        try
+        {
+            SetCurrentValue(VisibilityProperty, registry.IsVisible(MenuBarId) ? Visibility.Visible : Visibility.Collapsed);
+        }
+        catch (InvalidOperationException)
+        {
+            SetCurrentValue(VisibilityProperty, Visibility.Visible);
+        }
+    }
+
+    private IToolbarRegistryService? DiscoverRegistryFromVisualTree()
+    {
+        var window = Window.GetWindow(this);
+        if (window is null)
+            return null;
+
+        return FindVisualChild<ToolbarHostControl>(window)
+            ?.ToolbarRegistry;
+    }
 
     private void RebuildProjectedItems()
     {
@@ -106,6 +219,24 @@ public sealed class MenuHostControl : Control
 
         foreach (var item in ItemsSource.OfType<CoreMenuItem>())
             _projectedItems.Add(CreateProjectedItem(item));
+    }
+
+    private static T? FindVisualChild<T>(DependencyObject parent)
+        where T : DependencyObject
+    {
+        if (parent is T directMatch)
+            return directMatch;
+
+        var childCount = VisualTreeHelper.GetChildrenCount(parent);
+        for (var i = 0; i < childCount; i++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, i);
+            var match = FindVisualChild<T>(child);
+            if (match is not null)
+                return match;
+        }
+
+        return null;
     }
 
     private object CreateProjectedItem(CoreMenuItem source)

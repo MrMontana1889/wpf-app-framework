@@ -102,4 +102,23 @@ internal sealed class TemplateTestHost : IDisposable
         }
         return null;
     }
+
+    /// <summary>
+    /// Walks the visual tree depth-first from <paramref name="root"/>,
+    /// returning all elements of type <typeparamref name="T"/> found.
+    /// </summary>
+    public static IEnumerable<T> FindAllChildren<T>(DependencyObject root)
+        where T : DependencyObject
+    {
+        if (root is T match)
+            yield return match;
+
+        int count = System.Windows.Media.VisualTreeHelper.GetChildrenCount(root);
+        for (int i = 0; i < count; i++)
+        {
+            var child = System.Windows.Media.VisualTreeHelper.GetChild(root, i);
+            foreach (var result in FindAllChildren<T>(child))
+                yield return result;
+        }
+    }
 }

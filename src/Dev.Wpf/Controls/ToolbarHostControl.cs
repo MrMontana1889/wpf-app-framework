@@ -4,10 +4,16 @@
 using Dev.Core.Services;
 using Dev.Core.Toolbar;
 using System.Collections;
+using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Media3D;
 
 namespace Dev.Wpf.Controls;
 
@@ -21,6 +27,10 @@ public sealed class ToolbarHostControl : Control
 {
     private IToolbarRegistryService? _currentRegistry;
     private EventHandler<ToolbarVisibilityChangedEventArgs>? _visibilityChangedHandler;
+    private EventHandler<ToolbarItemVisibilityChangedEventArgs>? _itemVisibilityChangedHandler;
+    private INotifyCollectionChanged? _currentItemsSource;
+    private NotifyCollectionChangedEventHandler? _collectionChangedHandler;
+    private ToolBar? _toolbarElement;
 
     static ToolbarHostControl()
     {
@@ -32,6 +42,16 @@ public sealed class ToolbarHostControl : Control
     public ToolbarHostControl()
     {
         SetCurrentValue(IconProviderProperty, new ApplicationResourceIconProvider());
+        Loaded += (_, _) => AttachItemsSourceCollectionChangedHandler(ItemsSource);
+        Unloaded += (_, _) => DetachItemsSourceCollectionChangedHandler();
+        PreviewMouseRightButtonDown += OnPreviewMouseRightButtonDown;
+    }
+
+    public override void OnApplyTemplate()
+    {
+        base.OnApplyTemplate();
+
+        _toolbarElement = TemplateTestFindToolBar();
     }
 
     public static readonly DependencyProperty ItemsSourceProperty =
@@ -62,20 +82,20 @@ public sealed class ToolbarHostControl : Control
             typeof(ToolbarHostControl),
             new FrameworkPropertyMetadata(null, OnToolbarRegistryChanged));
 
+    public static readonly DependencyProperty MenuBarIdProperty =
+        DependencyProperty.Register(
+            nameof(MenuBarId),
+            typeof(ToolbarId),
+            typeof(ToolbarHostControl),
+            new FrameworkPropertyMetadata(new ToolbarId("MenuBar")));
+
     private static void OnItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (e.NewValue is null)
-            return;
+        var control = (ToolbarHostControl)d;
 
-        var view = CollectionViewSource.GetDefaultView(e.NewValue);
-        if (view is null)
-            return;
-
-        using (view.DeferRefresh())
-        {
-            view.SortDescriptions.Clear();
-            view.SortDescriptions.Add(new SortDescription(nameof(ToolbarItem.Order), ListSortDirection.Ascending));
-        }
+        control.DetachItemsSourceCollectionChangedHandler();
+        control.AttachItemsSourceCollectionChangedHandler(e.NewValue as IEnumerable);
+        control.ConfigureItemsProjection(e.NewValue as IEnumerable);
     }
 
     private static void OnIconProviderChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -85,6 +105,31 @@ public sealed class ToolbarHostControl : Control
             return;
 
         control.SetCurrentValue(IconProviderProperty, new ApplicationResourceIconProvider());
+    }
+
+    private void AttachItemsSourceCollectionChangedHandler(IEnumerable? source)
+    {
+        if (source is not INotifyCollectionChanged notifyCollectionChanged)
+            return;
+
+        _collectionChangedHandler ??= (_, _) =>
+        {
+            // ItemsSource content changed but reference stayed the same.
+            // Reconfigure projection so registry-based visibility remains enforced.
+            ConfigureItemsProjection(ItemsSource);
+        };
+
+        notifyCollectionChanged.CollectionChanged += _collectionChangedHandler;
+        _currentItemsSource = notifyCollectionChanged;
+    }
+
+    private void DetachItemsSourceCollectionChangedHandler()
+    {
+        if (_currentItemsSource is not null && _collectionChangedHandler is not null)
+        {
+            _currentItemsSource.CollectionChanged -= _collectionChangedHandler;
+            _currentItemsSource = null;
+        }
     }
 
     private static void OnToolbarIdChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -105,13 +150,18 @@ public sealed class ToolbarHostControl : Control
         if (_currentRegistry is not null && _visibilityChangedHandler is not null)
         {
             _currentRegistry.VisibilityChanged -= _visibilityChangedHandler;
+            if (_itemVisibilityChangedHandler is not null)
+                _currentRegistry.ItemVisibilityChanged -= _itemVisibilityChangedHandler;
+
             _currentRegistry = null;
             _visibilityChangedHandler = null;
+            _itemVisibilityChangedHandler = null;
         }
 
         if (ToolbarRegistry is null || !ToolbarId.HasValue)
         {
             ClearValue(VisibilityProperty);
+            ConfigureItemsProjection(ItemsSource);
             return;
         }
 
@@ -128,12 +178,261 @@ public sealed class ToolbarHostControl : Control
             }
         };
 
+        _itemVisibilityChangedHandler = (_, e) =>
+        {
+            if (e.ToolbarId == toolbarId)
+            {
+                RefreshItemsProjection();
+            }
+        };
+
         registry.VisibilityChanged += _visibilityChangedHandler;
+        registry.ItemVisibilityChanged += _itemVisibilityChangedHandler;
         _currentRegistry = registry;
 
         // Set initial visibility
         var initialVisibility = registry.IsVisible(toolbarId) ? Visibility.Visible : Visibility.Collapsed;
         SetCurrentValue(VisibilityProperty, initialVisibility);
+
+        // Apply items visibility filter
+        ConfigureItemsProjection(ItemsSource);
+    }
+
+    private void OnPreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (TryShowToolbarContextMenu(e.OriginalSource as DependencyObject, e.GetPosition(this)))
+            e.Handled = true;
+    }
+
+    private bool TryShowToolbarContextMenu(DependencyObject? originalSource, Point positionInControl)
+    {
+        if (_toolbarElement is null || ToolbarRegistry is null || originalSource is null)
+            return false;
+
+        if (!IsWithinToolbarVisualTree(originalSource))
+            return false;
+
+        var contextMenu = ContextMenu ?? new ContextMenu();
+        contextMenu.Items.Clear();
+
+        BuildToolbarVisibilityMenuEntries(contextMenu, ToolbarRegistry);
+        BuildCustomizeSubMenuEntry(contextMenu, ToolbarRegistry);
+
+        ContextMenu = contextMenu;
+
+        if (contextMenu.Items.Count == 0)
+            return false;
+
+        contextMenu.PlacementTarget = this;
+        contextMenu.Placement = PlacementMode.RelativePoint;
+        contextMenu.HorizontalOffset = positionInControl.X;
+        contextMenu.VerticalOffset = positionInControl.Y;
+        contextMenu.IsOpen = true;
+
+        return true;
+    }
+
+    private bool IsWithinToolbarVisualTree(DependencyObject source)
+    {
+        var current = source;
+        while (current is not null)
+        {
+            if (ReferenceEquals(current, this))
+                return true;
+
+            if (ReferenceEquals(current, _toolbarElement))
+                return true;
+
+            current = GetParent(current);
+        }
+
+        return false;
+    }
+
+    private static DependencyObject? GetParent(DependencyObject current)
+    {
+        return current switch
+        {
+            Visual or Visual3D => VisualTreeHelper.GetParent(current),
+            FrameworkContentElement frameworkContentElement => frameworkContentElement.Parent,
+            ContentElement contentElement => ContentOperations.GetParent(contentElement),
+            _ => LogicalTreeHelper.GetParent(current)
+        };
+    }
+
+    private void BuildToolbarVisibilityMenuEntries(ContextMenu contextMenu, IToolbarRegistryService registry)
+    {
+        var menuBarDefinition = registry.ToolbarDefinitions.FirstOrDefault(IsMenuBarDefinition);
+        var toolbarDefinitions = registry.ToolbarDefinitions.Where(definition => !IsMenuBarDefinition(definition)).ToList();
+
+        var addedAnyRows = false;
+
+        if (menuBarDefinition is not null)
+        {
+            AddRowVisibilityEntry(contextMenu, registry, menuBarDefinition);
+            addedAnyRows = true;
+        }
+
+        if (menuBarDefinition is not null && toolbarDefinitions.Count > 0)
+        {
+            contextMenu.Items.Add(new Separator());
+        }
+
+        foreach (var definition in toolbarDefinitions)
+        {
+            AddRowVisibilityEntry(contextMenu, registry, definition);
+            addedAnyRows = true;
+        }
+
+        if (!addedAnyRows)
+            return;
+    }
+
+    private bool IsMenuBarDefinition(ToolbarDefinition definition)
+    {
+        return definition.Id == MenuBarId;
+    }
+
+    private static void AddRowVisibilityEntry(ContextMenu contextMenu, IToolbarRegistryService registry, ToolbarDefinition definition)
+    {
+        var definitionId = definition.Id;
+
+        var toggleItem = new MenuItem
+        {
+            Header = definition.DisplayName,
+            IsCheckable = true,
+            IsChecked = registry.IsVisible(definitionId),
+            IsEnabled = definition.CanHide
+        };
+
+        toggleItem.Click += (_, _) =>
+        {
+            registry.SetVisibility(definitionId, toggleItem.IsChecked);
+        };
+
+        contextMenu.Items.Add(toggleItem);
+    }
+
+    private void BuildCustomizeSubMenuEntry(ContextMenu contextMenu, IToolbarRegistryService registry)
+    {
+        if (!ToolbarId.HasValue || ItemsSource is null)
+            return;
+
+        var toolbarId = ToolbarId.Value;
+        var definition = registry.ToolbarDefinitions.FirstOrDefault(d => d.Id == toolbarId);
+        if (definition is null)
+            return;
+
+        var customizeRoot = new MenuItem { Header = "Customize..." };
+
+        // Iterate items from ItemsSource (application-provided)
+        var itemsToProcess = ItemsSource is not null ? ItemsSource : Enumerable.Empty<object>();
+        foreach (var item in itemsToProcess)
+        {
+            if (item is not ToolbarItem toolbarItem)
+                continue;
+
+            var itemId = toolbarItem.Id;
+            var label = toolbarItem.SemanticMetadata.Text.Label;
+
+            var itemEntry = new MenuItem
+            {
+                Header = label,
+                IsCheckable = true,
+                IsChecked = registry.IsItemVisible(toolbarId, itemId)
+            };
+
+            itemEntry.Click += (_, _) =>
+            {
+                registry.SetItemVisibility(toolbarId, itemId, itemEntry.IsChecked);
+                RefreshItemsProjection();
+            };
+
+            customizeRoot.Items.Add(itemEntry);
+        }
+
+        if (customizeRoot.Items.Count == 0)
+        {
+            customizeRoot.Items.Add(new MenuItem
+            {
+                Header = "No customizable items",
+                IsEnabled = false
+            });
+        }
+
+        contextMenu.Items.Add(new Separator());
+        contextMenu.Items.Add(customizeRoot);
+    }
+
+    private void RefreshItemsProjection()
+    {
+        ConfigureItemsProjection(ItemsSource);
+    }
+
+    private void ConfigureItemsProjection(IEnumerable? source)
+    {
+        if (source is null)
+            return;
+
+        var view = CollectionViewSource.GetDefaultView(source);
+        if (view is null)
+            return;
+
+        using (view.DeferRefresh())
+        {
+            view.SortDescriptions.Clear();
+            view.SortDescriptions.Add(new SortDescription(nameof(ToolbarItem.Order), ListSortDirection.Ascending));
+            UpdateItemsVisibilityFilter(view);
+        }
+
+        view.Refresh();
+    }
+
+    private void UpdateItemsVisibilityFilter(ICollectionView view)
+    {
+        if (ToolbarRegistry is null || !ToolbarId.HasValue)
+        {
+            view.Filter = null;
+            return;
+        }
+
+        var toolbarId = ToolbarId.Value;
+        var registry = ToolbarRegistry;
+
+        // Apply filter: items are visible if registry says so
+        view.Filter = item =>
+        {
+            if (item is not ToolbarItem toolbarItem)
+                return true;
+
+            return registry.IsItemVisible(toolbarId, toolbarItem.Id);
+        };
+    }
+
+    private ToolBar? TemplateTestFindToolBar()
+    {
+        if (GetTemplateChild("PART_ToolBar") is ToolBar named)
+            return named;
+
+        return FindVisualChild<ToolBar>(this);
+    }
+
+    private static T? FindVisualChild<T>(DependencyObject parent)
+        where T : DependencyObject
+    {
+        if (parent is T directMatch)
+            return directMatch;
+
+        var count = System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent);
+        for (var i = 0; i < count; i++)
+        {
+            var child = System.Windows.Media.VisualTreeHelper.GetChild(parent, i);
+            var match = FindVisualChild<T>(child);
+            if (match is not null)
+                return match;
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -175,5 +474,14 @@ public sealed class ToolbarHostControl : Control
     {
         get => (Dev.Core.Services.IToolbarRegistryService?)GetValue(ToolbarRegistryProperty);
         set => SetValue(ToolbarRegistryProperty, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the semantic identity of the menu bar row definition in the toolbar registry.
+    /// </summary>
+    public ToolbarId MenuBarId
+    {
+        get => (ToolbarId)GetValue(MenuBarIdProperty);
+        set => SetValue(MenuBarIdProperty, value);
     }
 }

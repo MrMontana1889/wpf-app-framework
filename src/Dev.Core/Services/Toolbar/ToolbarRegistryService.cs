@@ -2,7 +2,6 @@
 // Copyright (c) 2026 MrMontana1889.  See LICENSE
 
 using Dev.Core.Toolbar;
-using Dev.Core.ViewModels.Controls;
 using System.Text.Json;
 
 namespace Dev.Core.Services;
@@ -10,20 +9,20 @@ namespace Dev.Core.Services;
 /// <summary>
 /// Persists and restores toolbar row-level (show / hide) visibility state
 /// to a JSON file on disk, keyed by <see cref="ToolbarId"/>.
+/// Semantic definitions are the only registration path.
 /// </summary>
 public class ToolbarRegistryService : IToolbarRegistryService
 {
     private readonly string _settingsFilePath;
-    private readonly List<ToolbarModel> _toolbars = new();
     private readonly List<ToolbarDefinition> _definitions = new();
     private readonly Dictionary<ToolbarId, ToolbarDefinition> _definitionsById = new();
     private readonly Dictionary<ToolbarId, bool> _visibilityById = new();
-    private readonly Dictionary<ToolbarId, List<ToolbarModel>> _toolbarsById = new();
+    private readonly Dictionary<(ToolbarId ToolbarId, ToolbarItemId ItemId), bool> _itemVisibilityByCompositeId = new();
     private Dictionary<string, bool> _persistedVisibilityData = new(StringComparer.Ordinal);
+    private Dictionary<string, Dictionary<string, bool>> _persistedItemVisibilityData = new(StringComparer.Ordinal);
 
     public event EventHandler<ToolbarVisibilityChangedEventArgs>? VisibilityChanged;
-
-    public IReadOnlyList<ToolbarModel> Toolbars => _toolbars.AsReadOnly();
+    public event EventHandler<ToolbarItemVisibilityChangedEventArgs>? ItemVisibilityChanged;
 
     public IReadOnlyList<ToolbarDefinition> ToolbarDefinitions => _definitions.AsReadOnly();
 
@@ -49,7 +48,8 @@ public class ToolbarRegistryService : IToolbarRegistryService
 
         // Policy is authoritative: non-hideable toolbars must remain visible.
         _visibilityById[definition.Id] = definition.CanHide ? isVisible : true;
-        ApplyVisibilityToRegisteredToolbars(definition.Id);
+
+        RegisterItems(definition);
     }
 
     public bool IsVisible(ToolbarId toolbarId)
@@ -58,6 +58,21 @@ public class ToolbarRegistryService : IToolbarRegistryService
             throw new InvalidOperationException($"Toolbar '{toolbarId}' is not registered.");
 
         return _visibilityById[toolbarId];
+    }
+
+    public bool IsItemVisible(ToolbarId toolbarId, ToolbarItemId itemId)
+    {
+        if (!_definitionsById.ContainsKey(toolbarId))
+            throw new InvalidOperationException($"Toolbar '{toolbarId}' is not registered.");
+
+        var key = (toolbarId, itemId);
+        
+        // Return existing visibility if tracked, otherwise default to true
+        if (_itemVisibilityByCompositeId.TryGetValue(key, out var isVisible))
+            return isVisible;
+
+        // Item hasn't been seen before; assume visible by default
+        return true;
     }
 
     public void SetVisibility(ToolbarId toolbarId, bool isVisible)
@@ -70,48 +85,25 @@ public class ToolbarRegistryService : IToolbarRegistryService
             return;
 
         _visibilityById[toolbarId] = effectiveVisibility;
-        ApplyVisibilityToRegisteredToolbars(toolbarId);
         SaveVisibility();
         VisibilityChanged?.Invoke(this, new ToolbarVisibilityChangedEventArgs(toolbarId, effectiveVisibility));
     }
 
-    public void Register(ToolbarModel toolbar, bool canHide = true)
+    public void SetItemVisibility(ToolbarId toolbarId, ToolbarItemId itemId, bool isVisible)
     {
-        ArgumentNullException.ThrowIfNull(toolbar);
+        if (!_definitionsById.ContainsKey(toolbarId))
+            throw new InvalidOperationException($"Toolbar '{toolbarId}' is not registered.");
 
-        var toolbarId = new ToolbarId(toolbar.Name);
-        if (!_definitionsById.TryGetValue(toolbarId, out var definition))
-        {
-            definition = new ToolbarDefinition(
-                id: toolbarId,
-                displayName: toolbar.Name,
-                canHide: canHide,
-                defaultVisible: toolbar.IsToolbarVisible);
-            RegisterDefinition(definition);
-        }
-        else if (definition.CanHide != canHide)
-        {
-            throw new InvalidOperationException(
-                $"Toolbar '{toolbar.Name}' was already registered with CanHide={definition.CanHide}.");
-        }
+        var key = (toolbarId, itemId);
+        
+        // Check if visibility is already at target state
+        if (_itemVisibilityByCompositeId.TryGetValue(key, out var currentVisibility) && currentVisibility == isVisible)
+            return;
 
-        _toolbars.Add(toolbar);
-        if (!_toolbarsById.TryGetValue(toolbarId, out var instances))
-        {
-            instances = new List<ToolbarModel>();
-            _toolbarsById[toolbarId] = instances;
-        }
-
-        instances.Add(toolbar);
-
-        toolbar.CanHide = definition.CanHide;
-        toolbar.IsToolbarVisible = _visibilityById[toolbarId];
-
-        toolbar.PropertyChanged += (_, e) =>
-        {
-            if (e.PropertyName == nameof(ToolbarModel.IsToolbarVisible))
-                SetVisibility(toolbarId, toolbar.IsToolbarVisible);
-        };
+        // Store visibility state (registry owns only state, not items)
+        _itemVisibilityByCompositeId[key] = isVisible;
+        SaveVisibility();
+        ItemVisibilityChanged?.Invoke(this, new ToolbarItemVisibilityChangedEventArgs(toolbarId, itemId, isVisible));
     }
 
     public void SaveVisibility()
@@ -119,21 +111,25 @@ public class ToolbarRegistryService : IToolbarRegistryService
         foreach (var (toolbarId, isVisible) in _visibilityById)
             _persistedVisibilityData[toolbarId.Value] = isVisible;
 
-        var json = JsonSerializer.Serialize(_persistedVisibilityData, new JsonSerializerOptions { WriteIndented = true });
-        File.WriteAllText(_settingsFilePath, json);
-    }
-
-    private void ApplyVisibilityToRegisteredToolbars(ToolbarId toolbarId)
-    {
-        if (!_toolbarsById.TryGetValue(toolbarId, out var toolbars))
-            return;
-
-        var isVisible = _visibilityById[toolbarId];
-        foreach (var toolbar in toolbars)
+        foreach (var ((toolbarId, itemId), isVisible) in _itemVisibilityByCompositeId)
         {
-            if (toolbar.IsToolbarVisible != isVisible)
-                toolbar.IsToolbarVisible = isVisible;
+            if (!_persistedItemVisibilityData.TryGetValue(toolbarId.Value, out var toolbarItems))
+            {
+                toolbarItems = new Dictionary<string, bool>(StringComparer.Ordinal);
+                _persistedItemVisibilityData[toolbarId.Value] = toolbarItems;
+            }
+
+            toolbarItems[itemId.Value] = isVisible;
         }
+
+        var payload = new ToolbarRegistryState
+        {
+            Toolbars = _persistedVisibilityData,
+            Items = _persistedItemVisibilityData
+        };
+
+        var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
+        File.WriteAllText(_settingsFilePath, json);
     }
 
     private void LoadFromDisk()
@@ -142,8 +138,69 @@ public class ToolbarRegistryService : IToolbarRegistryService
             return;
 
         var json = File.ReadAllText(_settingsFilePath);
-        var data = JsonSerializer.Deserialize<Dictionary<string, bool>>(json);
-        if (data is not null)
-            _persistedVisibilityData = data;
+        if (string.IsNullOrWhiteSpace(json))
+            return;
+
+        try
+        {
+            // Backward compatibility: previous format was Dictionary<string, bool>.
+            var legacyData = JsonSerializer.Deserialize<Dictionary<string, bool>>(json);
+            if (legacyData is not null)
+            {
+                _persistedVisibilityData = legacyData;
+                return;
+            }
+        }
+        catch (JsonException)
+        {
+            // Not legacy format.
+        }
+
+        try
+        {
+            var state = JsonSerializer.Deserialize<ToolbarRegistryState>(json);
+            if (state is null)
+                return;
+
+            _persistedVisibilityData = state.Toolbars is null
+                ? new Dictionary<string, bool>(StringComparer.Ordinal)
+                : new Dictionary<string, bool>(state.Toolbars, StringComparer.Ordinal);
+
+            _persistedItemVisibilityData = state.Items is null
+                ? new Dictionary<string, Dictionary<string, bool>>(StringComparer.Ordinal)
+                : state.Items.ToDictionary(
+                    pair => pair.Key,
+                    pair => new Dictionary<string, bool>(pair.Value, StringComparer.Ordinal),
+                    StringComparer.Ordinal);
+        }
+        catch (JsonException)
+        {
+            // Corrupt payload: ignore and continue with defaults.
+        }
+    }
+
+    private void RegisterItems(ToolbarDefinition definition)
+    {
+        foreach (var itemId in definition.ItemIds)
+        {
+            var key = (definition.Id, itemId);
+
+            // Initialize item visibility from persisted state if available
+            var itemVisible = true; // default to visible
+            if (_persistedItemVisibilityData.TryGetValue(definition.Id.Value, out var itemMap)
+                && itemMap.TryGetValue(itemId.Value, out var persistedItemVisible))
+            {
+                itemVisible = persistedItemVisible;
+            }
+
+            // Only register if not already present
+            _itemVisibilityByCompositeId.TryAdd(key, itemVisible);
+        }
+    }
+
+    private sealed class ToolbarRegistryState
+    {
+        public Dictionary<string, bool> Toolbars { get; set; } = new(StringComparer.Ordinal);
+        public Dictionary<string, Dictionary<string, bool>> Items { get; set; } = new(StringComparer.Ordinal);
     }
 }

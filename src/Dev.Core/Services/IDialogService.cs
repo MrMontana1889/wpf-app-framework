@@ -1,10 +1,6 @@
 ﻿// IDialogService.cs
 // Copyright (c) 2026 MrMontana1889.  See LICENSE
 
-using Dev.Core.ViewModels.Controls;
-
-namespace Dev.Core.Services;
-
 /// <summary>
 /// Result of a save changes prompt.
 /// </summary>
@@ -63,10 +59,4 @@ public interface IDialogService
     /// <param name="folderPath">The selected folder path, or null if cancelled.</param>
     /// <returns>True if a folder was selected, false if cancelled.</returns>
     bool ShowFolderBrowserDialog(out string? folderPath);
-
-    /// <summary>
-    /// Shows the Customize Toolbar dialog for the specified toolbar model.
-    /// </summary>
-    /// <param name="toolbarModel">The toolbar whose items will be customized.</param>
-    void ShowCustomizeToolbarDialog(ToolbarModel toolbarModel);
 }
