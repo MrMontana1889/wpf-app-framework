@@ -209,6 +209,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private void ToggleToolbarOptionA() => ToolbarOptionA = !ToolbarOptionA;
 
     [RelayCommand]
+    private void ExtraToolbarItem() { }
+
+    [RelayCommand]
     private static void ExitMenu()
     {
     }
@@ -404,7 +407,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 ToolbarItemKind.Label,
                 new ToolbarItemSemanticMetadata(new ToolbarItemText("Selection:")),
                 ToolbarItemDisplayIntent.TextOnly,
-                order: 10),
+                order: 10, 
+                logicalGroup: "Group A"),
 
             new ToolbarItem(
                 new ToolbarItemId("TestHost.Toolbar.SelectionCycle"),
@@ -415,14 +419,16 @@ public sealed partial class MainWindowViewModel : ObservableObject
                         "Click to cycle: Single -> Multiple -> None -> Single")),
                 ToolbarItemDisplayIntent.TextOnly,
                 order: 20,
-                command: ToggleSelectionModeCommand),
+                command: ToggleSelectionModeCommand,
+                logicalGroup: "Group A"),
 
             new ToolbarItem(
                 new ToolbarItemId("TestHost.Toolbar.Separator1"),
                 ToolbarItemKind.Separator,
                 new ToolbarItemSemanticMetadata(new ToolbarItemText("Separator")),
                 ToolbarItemDisplayIntent.TextOnly,
-                order: 30),
+                order: 30,
+                logicalGroup: "Group A"),
 
             new ToolbarItem(
                 new ToolbarItemId("TestHost.Toolbar.ShowCheckboxes"),
@@ -434,14 +440,16 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 ToolbarItemDisplayIntent.TextOnly,
                 order: 40,
                 command: ToggleShowCheckboxesCommand,
-                isChecked: ShowCheckboxes),
+                isChecked: ShowCheckboxes,
+                logicalGroup: "Group A"),
 
             new ToolbarItem(
                 new ToolbarItemId("TestHost.Toolbar.Separator2"),
                 ToolbarItemKind.Separator,
                 new ToolbarItemSemanticMetadata(new ToolbarItemText("Separator")),
                 ToolbarItemDisplayIntent.TextOnly,
-                order: 50),
+                order: 50,
+                logicalGroup: "Group A"),
 
             new ToolbarItem(
                 new ToolbarItemId("TestHost.Toolbar.DragDrop"),
@@ -453,14 +461,16 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 ToolbarItemDisplayIntent.TextOnly,
                 order: 60,
                 command: ToggleCanDragDropCommand,
-                isChecked: CanDragDrop),
+                isChecked: CanDragDrop,
+                logicalGroup: "Group A"),
 
             new ToolbarItem(
                 new ToolbarItemId("TestHost.Toolbar.Separator3"),
                 ToolbarItemKind.Separator,
                 new ToolbarItemSemanticMetadata(new ToolbarItemText("Separator")),
                 ToolbarItemDisplayIntent.TextOnly,
-                order: 70),
+                order: 70,
+                logicalGroup: "Group A"),
 
             new ToolbarItem(
                 new ToolbarItemId("TestHost.Toolbar.DarkTheme"),
@@ -472,12 +482,21 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 ToolbarItemDisplayIntent.TextOnly,
                 order: 80,
                 command: ToggleDarkThemeCommand,
-                isChecked: IsDarkTheme),
+                isChecked: IsDarkTheme,
+                logicalGroup: "Group A"),
         };
 
         PrimaryToolbarItems.Clear();
         foreach (var item in items)
             PrimaryToolbarItems.Add(item);
+
+        for (int i = 0; i < 8; ++i)
+        {
+            var toolbarItem = new ToolbarItem(new ToolbarItemId($"Item{i + 1}"), ToolbarItemKind.Button,
+                new ToolbarItemSemanticMetadata(new ToolbarItemText($"Item{i + 1}")), ToolbarItemDisplayIntent.TextOnly, 81 + i, true, true,
+                ExtraToolbarItemCommand, includeInMenuBar: false, logicalGroup: "Group B");
+            PrimaryToolbarItems.Add(toolbarItem);
+        }
 
         var items2 = new[]
         {
@@ -515,7 +534,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         };
 
         SecondaryToolbarItems.Clear();
-        foreach(var item in items2)
+        foreach (var item in items2)
             SecondaryToolbarItems.Add(item);
 
     }
