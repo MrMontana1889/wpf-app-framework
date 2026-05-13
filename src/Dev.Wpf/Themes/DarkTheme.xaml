@@ -23,6 +23,7 @@
     <!--  Light blue with better contrast  -->
     <SolidColorBrush x:Key="SelectedBackgroundBrush" Color="DarkBlue" />
     <SolidColorBrush x:Key="SelectedTextBrush" Color="Black" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.ControlTextBrushKey}" Color="#FFFFFF"/>
 
     <!--  Dark  -->
     <SolidColorBrush x:Key="PropertyGridEditorBackgroundBrush" Color="#FF1E1E1E" />
@@ -85,6 +86,20 @@
     <!--  Control glyphs (icons, arrows)  -->
     <SolidColorBrush x:Key="ControlGlyphForegroundBrush" Color="#E5E5E5" />
     <SolidColorBrush x:Key="ControlGlyphDisabledBrush" Color="#777777" />
+
+    <!-- Toolbar visuals (Dark theme) -->
+    <SolidColorBrush x:Key="Toolbar.Background" Color="#2B2B2B"/>
+    <SolidColorBrush x:Key="Toolbar.Border" Color="#3E3E42"/>
+
+    <SolidColorBrush x:Key="ToolbarItem.Foreground" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ToolbarItem.Background.Hover" Color="#3A3A3A"/>
+    <SolidColorBrush x:Key="ToolbarItem.Background.Pressed" Color="#444444"/>
+    <SolidColorBrush x:Key="ToolbarItem.Background.Checked" Color="#094771"/>
+    <SolidColorBrush x:Key="ToolbarItem.Foreground.Checked" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ToolbarItem.Background.Normal" Color="#2B2B2B"/>
+
+    <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}" Color="#2B2B2B"/> 
+    <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="#2B2B2B"/>
 
     <!--  TextBox Style  -->
     <Style TargetType="TextBox">

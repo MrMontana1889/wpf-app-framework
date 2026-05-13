@@ -21,24 +21,18 @@ namespace Dev.Wpf.Tests.Templates;
 public sealed class ToolbarHostControlTemplateTests
 {
     [Test]
-    public void Template_ContainsToolBarTray_AndToolBar()
+    public void Template_ContainsRootItemsHost()
     {
         var control = new ToolbarHostControl();
 
         using var host = new TemplateTestHost(control);
 
-        var tray = TemplateTestHost.FindChild<ToolBarTray>(control);
-        var toolbar = TemplateTestHost.FindChild<ToolBar>(control);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(tray, Is.Not.Null);
-            Assert.That(toolbar, Is.Not.Null);
-        });
+        var itemsHost = TemplateTestHost.FindNamedChild<ItemsControl>(control, "PART_ItemsHost");
+        Assert.That(itemsHost, Is.Not.Null);
     }
 
     [Test]
-    public void GroupedProjection_Disabled_RendersSingleToolBar()
+    public void Projection_RendersOrderedFlatItems()
     {
         var items = new[]
         {
@@ -48,18 +42,11 @@ public sealed class ToolbarHostControlTemplateTests
             CreateButtonItem("Build.B1", order: 3, tooltip: "b-1", logicalGroup: "B")
         };
 
-        var control = new ToolbarHostControl
-        {
-            EnableGroupedToolbarProjection = false,
-            ItemsSource = items
-        };
+        var control = new ToolbarHostControl { ItemsSource = items };
 
         using var host = new TemplateTestHost(control);
 
-        var toolbars = TemplateTestHost.FindAllChildren<ToolBar>(control).ToList();
-        Assert.That(toolbars, Has.Count.EqualTo(1));
-
-        var buttonTooltips = TemplateTestHost.FindAllChildren<Button>(toolbars[0])
+        var buttonTooltips = TemplateTestHost.FindAllChildren<Button>(control)
             .Select(button => button.ToolTip)
             .Cast<string>()
             .ToList();
@@ -68,7 +55,7 @@ public sealed class ToolbarHostControlTemplateTests
     }
 
     [Test]
-    public void GroupedProjection_Enabled_PartitionsByLogicalGroup_WithNullGroup()
+    public void Projection_IgnoresLogicalGroupAndPreservesOrder()
     {
         var items = new[]
         {
@@ -79,49 +66,20 @@ public sealed class ToolbarHostControlTemplateTests
             CreateButtonItem("Build.B1", order: 4, tooltip: "b-1", logicalGroup: "B")
         };
 
-        var control = new ToolbarHostControl
-        {
-            EnableGroupedToolbarProjection = true,
-            ItemsSource = items
-        };
+        var control = new ToolbarHostControl { ItemsSource = items };
 
         using var host = new TemplateTestHost(control);
 
-        var toolbars = TemplateTestHost.FindAllChildren<ToolBar>(control).ToList();
-        Assert.That(toolbars, Has.Count.EqualTo(3));
+        var buttonTooltips = TemplateTestHost.FindAllChildren<Button>(control)
+            .Select(button => button.ToolTip)
+            .Cast<string>()
+            .ToList();
 
-        var firstGroup = TemplateTestHost.FindAllChildren<Button>(toolbars[0]).Select(button => button.ToolTip).Cast<string>().ToList();
-        var secondGroup = TemplateTestHost.FindAllChildren<Button>(toolbars[1]).Select(button => button.ToolTip).Cast<string>().ToList();
-        var thirdGroup = TemplateTestHost.FindAllChildren<Button>(toolbars[2]).Select(button => button.ToolTip).Cast<string>().ToList();
-
-        Assert.That(firstGroup, Is.EqualTo(new[] { "null-1", "null-2" }));
-        Assert.That(secondGroup, Is.EqualTo(new[] { "a-1", "a-2" }));
-        Assert.That(thirdGroup, Is.EqualTo(new[] { "b-1" }));
+        Assert.That(buttonTooltips, Is.EqualTo(new[] { "null-1", "a-1", "null-2", "a-2", "b-1" }));
     }
 
     [Test]
-    public void GroupedProjection_Enabled_WithSingleLogicalGroup_RendersSingleToolBar()
-    {
-        var items = new[]
-        {
-            CreateButtonItem("Build.One", order: 0, tooltip: "one", logicalGroup: "A"),
-            CreateButtonItem("Build.Two", order: 1, tooltip: "two", logicalGroup: "A")
-        };
-
-        var control = new ToolbarHostControl
-        {
-            EnableGroupedToolbarProjection = true,
-            ItemsSource = items
-        };
-
-        using var host = new TemplateTestHost(control);
-
-        var toolbars = TemplateTestHost.FindAllChildren<ToolBar>(control).ToList();
-        Assert.That(toolbars, Has.Count.EqualTo(1));
-    }
-
-    [Test]
-    public void GroupedProjection_Enabled_OmitsEmptyGroupsAfterRegistryVisibilityFiltering()
+    public void Projection_OmitsHiddenItemsAfterRegistryVisibilityFiltering()
     {
         var appDataPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(appDataPath);
@@ -137,7 +95,6 @@ public sealed class ToolbarHostControlTemplateTests
 
             var control = new ToolbarHostControl
             {
-                EnableGroupedToolbarProjection = true,
                 ToolbarRegistry = registry,
                 ToolbarId = toolbarId,
                 ItemsSource = new[]
@@ -149,10 +106,7 @@ public sealed class ToolbarHostControlTemplateTests
 
             using var host = new TemplateTestHost(control);
 
-            var toolbars = TemplateTestHost.FindAllChildren<ToolBar>(control).ToList();
-            Assert.That(toolbars, Has.Count.EqualTo(1));
-
-            var buttonTooltips = TemplateTestHost.FindAllChildren<Button>(toolbars[0])
+            var buttonTooltips = TemplateTestHost.FindAllChildren<Button>(control)
                 .Select(button => button.ToolTip)
                 .Cast<string>()
                 .ToList();
@@ -164,6 +118,59 @@ public sealed class ToolbarHostControlTemplateTests
             if (Directory.Exists(appDataPath))
                 Directory.Delete(appDataPath, true);
         }
+    }
+
+    [Test]
+    public void ToolbarWrapPanel_WrapsButtons_WhenWidthIsConstrained()
+    {
+        var items = CreateWideItems();
+
+        var control = new ToolbarHostControl
+        {
+            Width = 120,
+            ItemsSource = items
+        };
+
+        using var host = new TemplateTestHost(control);
+
+        var slots = GetProjectedButtonSlots(control);
+
+        var distinctRows = slots
+            .Select(slot => slot.Top)
+            .DistinctBy(value => Math.Round(value, 1))
+            .Count();
+        Assert.That(distinctRows, Is.GreaterThan(1));
+    }
+
+    [Test]
+    public void Projection_PreservesButtonOrderingAcrossWrappedRows()
+    {
+        var items = CreateWideItems();
+
+        var control = new ToolbarHostControl
+        {
+            Width = 120,
+            ItemsSource = items
+        };
+
+        using var host = new TemplateTestHost(control);
+
+        var orderedLabels = GetProjectedButtonSlots(control)
+            .OrderBy(slot => slot.Top)
+            .ThenBy(slot => slot.Left)
+            .Select(slot => slot.Label)
+            .ToList();
+
+        Assert.That(
+            orderedLabels,
+            Is.EqualTo(new[]
+            {
+                "alpha",
+                "beta",
+                "gamma",
+                "delta",
+                "epsilon"
+            }));
     }
 
     [Test]
@@ -292,11 +299,10 @@ public sealed class ToolbarHostControlTemplateTests
             };
 
             using var host = new TemplateTestHost(control);
-            var toolbar = TemplateTestHost.FindChild<ToolBar>(control);
-            Assert.That(toolbar, Is.Not.Null);
-            var toolbarHost = toolbar!;
+            var toolbarHost = TemplateTestHost.FindNamedChild<ItemsControl>(control, "PART_ItemsHost");
+            Assert.That(toolbarHost, Is.Not.Null);
 
-            var menuOpened = OpenToolbarContextMenu(control, toolbarHost);
+            var menuOpened = OpenToolbarContextMenu(control, toolbarHost!);
             Assert.That(menuOpened, Is.True);
 
             var contextMenu = control.ContextMenu;
@@ -340,10 +346,10 @@ public sealed class ToolbarHostControlTemplateTests
             };
 
             using var host = new TemplateTestHost(control);
-            var toolbarTray = TemplateTestHost.FindChild<ToolBarTray>(control);
-            Assert.That(toolbarTray, Is.Not.Null);
+            var toolbarChrome = TemplateTestHost.FindNamedChild<ItemsControl>(control, "PART_ItemsHost");
+            Assert.That(toolbarChrome, Is.Not.Null);
 
-            var menuOpened = OpenToolbarContextMenu(control, toolbarTray!);
+            var menuOpened = OpenToolbarContextMenu(control, toolbarChrome!);
             Assert.That(menuOpened, Is.True, "Right-click on empty toolbar chrome should open host menu");
 
             var contextMenu = control.ContextMenu;
@@ -389,10 +395,10 @@ public sealed class ToolbarHostControlTemplateTests
             };
 
             using var host = new TemplateTestHost(control);
-            var toolbarTray = TemplateTestHost.FindChild<ToolBarTray>(control);
-            Assert.That(toolbarTray, Is.Not.Null);
+            var toolbarChrome = TemplateTestHost.FindNamedChild<ItemsControl>(control, "PART_ItemsHost");
+            Assert.That(toolbarChrome, Is.Not.Null);
 
-            var menuOpened = OpenToolbarContextMenu(control, toolbarTray!);
+            var menuOpened = OpenToolbarContextMenu(control, toolbarChrome!);
             Assert.That(menuOpened, Is.True);
 
             var contextMenu = control.ContextMenu;
@@ -442,10 +448,10 @@ public sealed class ToolbarHostControlTemplateTests
             };
 
             using var host = new TemplateTestHost(control);
-            var toolbarTray = TemplateTestHost.FindChild<ToolBarTray>(control);
-            Assert.That(toolbarTray, Is.Not.Null);
+            var toolbarChrome = TemplateTestHost.FindNamedChild<ItemsControl>(control, "PART_ItemsHost");
+            Assert.That(toolbarChrome, Is.Not.Null);
 
-            var menuOpened = OpenToolbarContextMenu(control, toolbarTray!);
+            var menuOpened = OpenToolbarContextMenu(control, toolbarChrome!);
             Assert.That(menuOpened, Is.True);
 
             var contextMenu = control.ContextMenu;
@@ -495,10 +501,10 @@ public sealed class ToolbarHostControlTemplateTests
             };
 
             using var host = new TemplateTestHost(control);
-            var toolbarTray = TemplateTestHost.FindChild<ToolBarTray>(control);
-            Assert.That(toolbarTray, Is.Not.Null);
+            var toolbarChrome = TemplateTestHost.FindNamedChild<ItemsControl>(control, "PART_ItemsHost");
+            Assert.That(toolbarChrome, Is.Not.Null);
 
-            var menuOpened = OpenToolbarContextMenu(control, toolbarTray!);
+            var menuOpened = OpenToolbarContextMenu(control, toolbarChrome!);
             Assert.That(menuOpened, Is.True);
 
             var contextMenu = control.ContextMenu;
@@ -558,10 +564,10 @@ public sealed class ToolbarHostControlTemplateTests
             };
 
             using var host = new TemplateTestHost(control);
-            var toolbarTray = TemplateTestHost.FindChild<ToolBarTray>(control);
-            Assert.That(toolbarTray, Is.Not.Null);
+            var toolbarChrome = TemplateTestHost.FindNamedChild<ItemsControl>(control, "PART_ItemsHost");
+            Assert.That(toolbarChrome, Is.Not.Null);
 
-            var menuOpened = OpenToolbarContextMenu(control, toolbarTray!);
+            var menuOpened = OpenToolbarContextMenu(control, toolbarChrome!);
             Assert.That(menuOpened, Is.True);
 
             var contextMenu = control.ContextMenu;
@@ -655,14 +661,13 @@ public sealed class ToolbarHostControlTemplateTests
             };
 
             using var host = new TemplateTestHost(control);
-            var toolbar = TemplateTestHost.FindChild<ToolBar>(control);
             var button = TemplateTestHost.FindChild<Button>(control);
-            Assert.That(toolbar, Is.Not.Null);
             Assert.That(button, Is.Not.Null);
-            var toolbarHost = toolbar!;
+            var toolbarHost = TemplateTestHost.FindNamedChild<ItemsControl>(control, "PART_ItemsHost");
+            Assert.That(toolbarHost, Is.Not.Null);
             Assert.That(button!.Visibility, Is.EqualTo(Visibility.Visible));
 
-            var menuOpened = OpenToolbarContextMenu(control, toolbarHost);
+            var menuOpened = OpenToolbarContextMenu(control, toolbarHost!);
             Assert.That(menuOpened, Is.True);
 
             var contextMenu = control.ContextMenu;
@@ -877,6 +882,18 @@ public sealed class ToolbarHostControlTemplateTests
             logicalGroup: logicalGroup);
     }
 
+    private static IReadOnlyList<ToolbarItem> CreateWideItems()
+    {
+        return new[]
+        {
+            CreateButtonItem("alpha-with-very-long-caption", 0, "alpha", "A"),
+            CreateButtonItem("beta-with-very-long-caption", 1, "beta", "B"),
+            CreateButtonItem("gamma-with-very-long-caption", 2, "gamma", "C"),
+            CreateButtonItem("delta-with-very-long-caption", 3, "delta", "D"),
+            CreateButtonItem("epsilon-with-very-long-caption", 4, "epsilon", "E")
+        };
+    }
+
     private static bool OpenToolbarContextMenu(ToolbarHostControl control, DependencyObject originalSource)
     {
         var method = typeof(ToolbarHostControl).GetMethod("TryShowToolbarContextMenu", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -884,5 +901,22 @@ public sealed class ToolbarHostControlTemplateTests
         var result = method!.Invoke(control, [originalSource, new Point(8, 8)]);
         Assert.That(result, Is.Not.Null);
         return (bool)result!;
+    }
+
+    private static List<(double Left, double Top, double Right, string Label)> GetProjectedButtonSlots(ToolbarHostControl control)
+    {
+        return TemplateTestHost
+            .FindAllChildren<Button>(control)
+            .Select(button =>
+            {
+                var topLeft = button.TransformToAncestor(control).Transform(new Point(0, 0));
+
+                return (
+                    Left: topLeft.X,
+                    Top: topLeft.Y,
+                    Right: topLeft.X + button.ActualWidth,
+                    Label: (string)button.ToolTip);
+            })
+            .ToList();
     }
 }

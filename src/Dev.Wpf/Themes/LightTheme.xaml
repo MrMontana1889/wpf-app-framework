@@ -82,6 +82,17 @@
     <SolidColorBrush x:Key="ControlGlyphForegroundBrush" Color="#404040" />
     <SolidColorBrush x:Key="ControlGlyphDisabledBrush" Color="#A0A0A0" />
 
+    <!-- Toolbar visuals (Light theme) -->
+    <SolidColorBrush x:Key="Toolbar.Background" Color="#F5F5F5"/>
+    <SolidColorBrush x:Key="Toolbar.Border" Color="#C8C8C8"/>
+
+    <SolidColorBrush x:Key="ToolbarItem.Foreground" Color="#000000"/>
+    <SolidColorBrush x:Key="ToolbarItem.Background.Hover" Color="#E6E6E6"/>
+    <SolidColorBrush x:Key="ToolbarItem.Background.Pressed" Color="#DADADA"/>
+    <SolidColorBrush x:Key="ToolbarItem.Background.Checked" Color="#CCE4FF"/>
+    <SolidColorBrush x:Key="ToolbarItem.Foreground.Checked" Color="#0050A0"/>
+    <SolidColorBrush x:Key="ToolbarItem.Background.Normal" Color="#F5F5F5"/>
+
     <!--
         Scoped menu-item style for ContextMenu surfaces only.
         This restores compact context-menu spacing without reintroducing
