@@ -36,6 +36,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IsDarkTheme = true;
 
         IconProvider = new PackUriIconProvider("Dev.Wpf.TestHost", "Resources/Icons");
+        ToolbarIconProvider = new ApplicationResourceIconProvider();
 
         RebuildMenuItems();
         RebuildToolbarItems();
@@ -52,6 +53,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public IToolbarRegistryService ToolbarRegistry => _toolbarRegistry;
 
     public IIconProvider IconProvider { get; }
+
+    public IIconProvider ToolbarIconProvider { get; }
 
     // -----------------------------------------------------------------------
     // Sample data and providers (never change at runtime)
@@ -416,8 +419,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 new ToolbarItemSemanticMetadata(
                     new ToolbarItemText(
                         SelectionModeLabel,
-                        "Click to cycle: Single -> Multiple -> None -> Single")),
-                ToolbarItemDisplayIntent.TextOnly,
+                        "Click to cycle: Single -> Multiple -> None -> Single"), iconKey: new IconKey("folder")),
+                ToolbarItemDisplayIntent.IconAndText,
                 order: 20,
                 command: ToggleSelectionModeCommand,
                 logicalGroup: "Group A"),
@@ -457,8 +460,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 new ToolbarItemSemanticMetadata(
                     new ToolbarItemText(
                         "Drag & Drop",
-                        "Enable or disable drag-and-drop reordering")),
-                ToolbarItemDisplayIntent.TextOnly,
+                        "Enable or disable drag-and-drop reordering"), new IconKey("folder")),
+                ToolbarItemDisplayIntent.IconAndText,
                 order: 60,
                 command: ToggleCanDragDropCommand,
                 isChecked: CanDragDrop,

@@ -23,8 +23,18 @@
 
         <controls:MenuHostControl MenuBarId="{Binding MenuBarId}" DockPanel.Dock="Top" ItemsSource="{Binding MainMenuItems}" />
 
-        <controls:ToolbarHostControl DockPanel.Dock="Top" EnableGroupedToolbarProjection="True" MenuBarId="{Binding MenuBarId}" ToolbarId="{Binding PrimaryToolbarId}" ToolbarRegistry="{Binding ToolbarRegistry}" ItemsSource="{Binding PrimaryToolbarItems}" />
-        <controls:ToolbarHostControl DockPanel.Dock="Top" MenuBarId="{Binding MenuBarId}" ToolbarId="{Binding SecondaryToolbarId}" ToolbarRegistry="{Binding ToolbarRegistry}" ItemsSource="{Binding SecondaryToolbarItems}" />
+        <controls:ToolbarHostControl DockPanel.Dock="Top" 
+                                     IconProvider="{Binding ToolbarIconProvider}"
+                                     EnableGroupedToolbarProjection="True" 
+                                     MenuBarId="{Binding MenuBarId}" 
+                                     ToolbarId="{Binding PrimaryToolbarId}" 
+                                     ToolbarRegistry="{Binding ToolbarRegistry}" 
+                                     ItemsSource="{Binding PrimaryToolbarItems}" />
+        <controls:ToolbarHostControl DockPanel.Dock="Top" 
+                                     MenuBarId="{Binding MenuBarId}" 
+                                     ToolbarId="{Binding SecondaryToolbarId}" 
+                                     ToolbarRegistry="{Binding ToolbarRegistry}" 
+                                     ItemsSource="{Binding SecondaryToolbarItems}" />
 
         <!--
             ================================================================

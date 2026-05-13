@@ -8,7 +8,6 @@ using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
@@ -17,7 +16,6 @@ namespace Dev.Wpf.Controls;
 
 /// <summary>
 /// WPF projection host for Core <see cref="ToolbarItem"/> data.
-/// Renders items inside a native <see cref="ToolBarTray"/> and <see cref="ToolBar"/>.
 /// Can be associated with a semantic ToolbarId and registry to automatically
 /// respond to visibility changes.
 /// </summary>
@@ -28,8 +26,7 @@ public sealed class ToolbarHostControl : Control
     private EventHandler<ToolbarItemVisibilityChangedEventArgs>? _itemVisibilityChangedHandler;
     private INotifyCollectionChanged? _currentItemsSource;
     private NotifyCollectionChangedEventHandler? _collectionChangedHandler;
-    private ToolBarTray? _toolbarTrayElement;
-    private ToolBar? _toolbarElement;
+    private ItemsControl? _itemsHostElement;
 
     static ToolbarHostControl()
     {
@@ -50,8 +47,8 @@ public sealed class ToolbarHostControl : Control
     {
         base.OnApplyTemplate();
 
-        _toolbarTrayElement = TemplateTestFindToolBarTray();
-        RebuildToolbarProjectionVisuals();
+        _itemsHostElement = TemplateTestFindItemsHost();
+        RefreshItemsProjection();
     }
 
     public static readonly DependencyProperty ItemsSourceProperty =
@@ -95,6 +92,15 @@ public sealed class ToolbarHostControl : Control
             typeof(ToolbarId),
             typeof(ToolbarHostControl),
             new FrameworkPropertyMetadata(new ToolbarId("MenuBar")));
+
+    private static readonly DependencyPropertyKey ProjectedItemsPropertyKey =
+        DependencyProperty.RegisterReadOnly(
+            nameof(ProjectedItems),
+            typeof(IReadOnlyList<ToolbarItem>),
+            typeof(ToolbarHostControl),
+            new FrameworkPropertyMetadata(Array.Empty<ToolbarItem>()));
+
+    public static readonly DependencyProperty ProjectedItemsProperty = ProjectedItemsPropertyKey.DependencyProperty;
 
     private static void OnItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
@@ -219,7 +225,7 @@ public sealed class ToolbarHostControl : Control
 
     private bool TryShowToolbarContextMenu(DependencyObject? originalSource, Point positionInControl)
     {
-        if (_toolbarElement is null || ToolbarRegistry is null || originalSource is null)
+        if (_itemsHostElement is null || ToolbarRegistry is null || originalSource is null)
             return false;
 
         if (!IsWithinToolbarVisualTree(originalSource))
@@ -253,7 +259,7 @@ public sealed class ToolbarHostControl : Control
             if (ReferenceEquals(current, this))
                 return true;
 
-            if (ReferenceEquals(current, _toolbarElement))
+            if (ReferenceEquals(current, _itemsHostElement))
                 return true;
 
             current = GetParent(current);
@@ -385,8 +391,7 @@ public sealed class ToolbarHostControl : Control
     private void ConfigureItemsProjection(IEnumerable? source)
     {
         var visibleItems = BuildVisibleOrderedItems(source);
-        var groups = BuildProjectedGroups(visibleItems);
-        RebuildToolbarProjectionVisuals(groups);
+        SetValue(ProjectedItemsPropertyKey, visibleItems);
     }
 
     private List<ToolbarItem> BuildVisibleOrderedItems(IEnumerable? source)
@@ -408,106 +413,12 @@ public sealed class ToolbarHostControl : Control
             .ToList();
     }
 
-    private IReadOnlyList<IReadOnlyList<ToolbarItem>> BuildProjectedGroups(IReadOnlyList<ToolbarItem> orderedVisibleItems)
+    private ItemsControl? TemplateTestFindItemsHost()
     {
-        if (!EnableGroupedToolbarProjection)
-            return [orderedVisibleItems];
-
-        if (orderedVisibleItems.Count == 0)
-            return [];
-
-        var groups = new List<(string? GroupKey, List<ToolbarItem> Items)>();
-
-        foreach (var item in orderedVisibleItems)
-        {
-            var groupKey = item.LogicalGroup;
-            var groupIndex = groups.FindIndex(group => string.Equals(group.GroupKey, groupKey, StringComparison.Ordinal));
-            if (groupIndex < 0)
-            {
-                groupIndex = groups.Count;
-                groups.Add((groupKey, []));
-            }
-
-            groups[groupIndex].Items.Add(item);
-        }
-
-        return groups
-            .Select(group => group.Items)
-            .Where(groupItems => groupItems.Count > 0)
-            .Select(groupItems => (IReadOnlyList<ToolbarItem>)groupItems)
-            .ToList();
-    }
-
-    private void RebuildToolbarProjectionVisuals()
-    {
-        var visibleItems = BuildVisibleOrderedItems(ItemsSource);
-        var groups = BuildProjectedGroups(visibleItems);
-        RebuildToolbarProjectionVisuals(groups);
-    }
-
-    private void RebuildToolbarProjectionVisuals(IReadOnlyList<IReadOnlyList<ToolbarItem>> groups)
-    {
-        if (_toolbarTrayElement is null)
-            return;
-
-        _toolbarTrayElement.ToolBars.Clear();
-
-        foreach (var group in groups)
-        {
-            _toolbarTrayElement.ToolBars.Add(CreateProjectedToolBar(group));
-        }
-
-        _toolbarElement = _toolbarTrayElement.ToolBars.OfType<ToolBar>().FirstOrDefault();
-    }
-
-    private ToolBar CreateProjectedToolBar(IReadOnlyList<ToolbarItem> group)
-    {
-        var toolbar = new ToolBar();
-
-        var backgroundBinding = new Binding(nameof(Background))
-        {
-            Source = this,
-            Mode = BindingMode.OneWay
-        };
-        BindingOperations.SetBinding(toolbar, BackgroundProperty, backgroundBinding);
-
-        var foregroundBinding = new Binding(nameof(Foreground))
-        {
-            Source = this,
-            Mode = BindingMode.OneWay
-        };
-        BindingOperations.SetBinding(toolbar, ForegroundProperty, foregroundBinding);
-
-        var itemsControl = new ItemsControl
-        {
-            ItemsSource = group
-        };
-
-        if (TryFindResource("ToolbarItemTemplateSelector") is DataTemplateSelector templateSelector)
-            itemsControl.ItemTemplateSelector = templateSelector;
-
-        var panelFactory = new FrameworkElementFactory(typeof(StackPanel));
-        panelFactory.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
-        itemsControl.ItemsPanel = new ItemsPanelTemplate(panelFactory);
-
-        toolbar.Items.Add(itemsControl);
-        return toolbar;
-    }
-
-    private ToolBarTray? TemplateTestFindToolBarTray()
-    {
-        if (GetTemplateChild("PART_ToolBarTray") is ToolBarTray named)
+        if (GetTemplateChild("PART_ItemsHost") is ItemsControl named)
             return named;
 
-        return FindVisualChild<ToolBarTray>(this);
-    }
-
-    private ToolBar? TemplateTestFindToolBar()
-    {
-        if (GetTemplateChild("PART_ToolBar") is ToolBar named)
-            return named;
-
-        return FindVisualChild<ToolBar>(this);
+        return FindVisualChild<ItemsControl>(this);
     }
 
     private static T? FindVisualChild<T>(DependencyObject parent)
@@ -571,8 +482,8 @@ public sealed class ToolbarHostControl : Control
 
     /// <summary>
     /// Gets or sets whether toolbar item projection is partitioned into multiple native
-    /// <see cref="ToolBar"/> instances by <see cref="ToolbarItem.LogicalGroup"/>.
-    /// Default is <c>false</c>, which preserves single-toolbar projection.
+    /// visual groups by <see cref="ToolbarItem.LogicalGroup"/>.
+    /// Default is <c>false</c>, which preserves single-group projection.
     /// </summary>
     public bool EnableGroupedToolbarProjection
     {
@@ -587,5 +498,15 @@ public sealed class ToolbarHostControl : Control
     {
         get => (ToolbarId)GetValue(MenuBarIdProperty);
         set => SetValue(MenuBarIdProperty, value);
+    }
+
+    /// <summary>
+    /// Gets the projected toolbar items produced from <see cref="ItemsSource"/>.
+    /// This is consumed by the control template to render a flat toolbar list.
+    /// </summary>
+    public IReadOnlyList<ToolbarItem> ProjectedItems
+    {
+        get => (IReadOnlyList<ToolbarItem>)GetValue(ProjectedItemsProperty);
+        private set => SetValue(ProjectedItemsPropertyKey, value);
     }
 }
