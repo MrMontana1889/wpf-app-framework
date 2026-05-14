@@ -79,18 +79,131 @@
     <Style TargetType="{x:Type controls:MenuHostControl}">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{DynamicResource ControlForegroundBrush}" />
+
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type controls:MenuHostControl}">
+
                     <Menu
-                        Background="{TemplateBinding Background}"
-                        Foreground="{TemplateBinding Foreground}"
-                        ItemsSource="{Binding ProjectedItems, RelativeSource={RelativeSource TemplatedParent}}" />
+                          Background="{TemplateBinding Background}"
+                          Foreground="{TemplateBinding Foreground}"
+                          ItemsSource="{Binding ProjectedItems, RelativeSource={RelativeSource TemplatedParent}}">
+
+                        <Menu.Resources>
+
+                            <!-- ✅ Fully owned MenuItem styling -->
+                            <Style TargetType="MenuItem">
+
+                                <!-- Match toolbar density -->
+                                <Setter Property="Padding" Value="6,2"/>
+                                <Setter Property="Margin" Value="0"/>
+
+                                <!-- Theme -->
+                                <Setter Property="Background" Value="{DynamicResource Toolbar.Background}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource ToolbarItem.Foreground}"/>
+
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="MenuItem">
+
+                                            <Grid>
+
+                                                <!-- ===== Root Layout ===== -->
+                                                <Border x:Name="Root" Background="{TemplateBinding Background}">
+
+                                                    <Grid Margin="{TemplateBinding Padding}">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition x:Name="IconColumn" Width="20"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <!-- Icon -->
+                                                        <ContentPresenter
+                                                            x:Name="IconPresenter"
+                                                            Grid.Column="0"
+                                                            VerticalAlignment="Center"
+                                                            HorizontalAlignment="Center"
+                                                            ContentSource="Icon"/>
+
+                                                        <!-- Header -->
+                                                        <ContentPresenter
+                                                            Grid.Column="1"
+                                                            Margin="4,0"
+                                                            VerticalAlignment="Center"
+                                                            RecognizesAccessKey="True"
+                                                            ContentSource="Header"/>
+
+                                                        <!-- Shortcut text -->
+                                                        <TextBlock
+                                                            Grid.Column="2"
+                                                            Margin="8,0,4,0"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="{TemplateBinding Foreground}"
+                                                            Text="{TemplateBinding InputGestureText}"/>
+
+                                                    </Grid>
+
+                                                </Border>
+
+                                                <!-- ===== Submenu Popup ===== -->
+                                                <Popup x:Name="PART_Popup"
+                                                     Placement="Bottom"
+                                                     AllowsTransparency="True"
+                                                     IsOpen="{TemplateBinding IsSubmenuOpen}">
+
+                                                    <Border
+                                                      Background="{DynamicResource Toolbar.Background}"
+                                                      BorderBrush="{DynamicResource Toolbar.Border}"
+                                                      BorderThickness="1">
+
+                                                        <StackPanel IsItemsHost="True"/>
+
+                                                    </Border>
+
+                                                </Popup>
+
+                                            </Grid>
+
+                                            <!-- ===== Behavior ===== -->
+                                            <ControlTemplate.Triggers>
+
+                                                <!-- Hover -->
+                                                <Trigger Property="IsHighlighted" Value="True">
+                                                    <Setter TargetName="Root" Property="Background" Value="{DynamicResource ToolbarItem.Background.Hover}"/>
+                                                </Trigger>
+
+                                                <!-- Disabled -->
+                                                <Trigger Property="IsEnabled" Value="False">
+                                                    <Setter Property="Opacity" Value="0.6"/>
+                                                </Trigger>
+
+                                                <Trigger Property="Role" Value="TopLevelHeader">
+                                                    <!-- Kill all left padding / icon layout -->
+                                                    <Setter TargetName="IconColumn" Property="Width" Value="0"/>
+                                                    <Setter TargetName="IconPresenter" Property="Visibility" Value="Collapsed"/>
+
+                                                    <!-- Tighten spacing to match WinForms-style menus -->
+                                                    <Setter Property="Padding" Value="8,2"/>
+                                                </Trigger>
+                                                
+                                            </ControlTemplate.Triggers>
+
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+
+                            </Style>
+
+                        </Menu.Resources>
+
+                    </Menu>
+
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
-
+    
     <!--
         ═══════════════════════════════════════════════════════════════════
         ToolbarHostControl — Phase 2 (Core ToolbarItem projection)
