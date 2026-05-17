@@ -15,10 +15,16 @@ jobs:
     runs-on: windows-latest
 
     steps:
+      - name: Checkout PropertyTools
+        uses: actions/checkout@v4
+        with:
+          repository: PondPackMan2023/PropertyTools
+          path: PropertyTools
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: recursive
+          path: wpf-app-framework
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -27,28 +33,20 @@ jobs:
             10.0.x
 
       - name: Restore
-        run: dotnet restore wpf-app-framework.slnx
+        run: dotnet restore wpf-app-framework/wpf-app-framework.slnx
 
       - name: Build
-        run: dotnet build wpf-app-framework.slnx --configuration Release --no-restore
+        run: dotnet build wpf-app-framework/wpf-app-framework.slnx --configuration Release --no-restore
 
       - name: Test with coverage
         run: >-
-          dotnet test wpf-app-framework.slnx
+          dotnet test wpf-app-framework/wpf-app-framework.slnx
           --configuration Release
           --no-build
           --logger "trx"
           --results-directory "TestResults"
           --collect:"XPlat Code Coverage"
           --filter "FullyQualifiedName!~PropertyTools"
-
-      - name: Test PropertyTools.Wpf.Tests
-        run: >-
-          dotnet test submodules/PropertyTools/Source/PropertyTools.Wpf.Tests/PropertyTools.Wpf.Tests.csproj
-          --configuration Release
-          --no-build
-          --logger "trx"
-          --results-directory "TestResults"
 
       - name: Install ReportGenerator
         run: dotnet tool install --global dotnet-reportgenerator-globaltool

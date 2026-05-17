@@ -1,8 +1,7 @@
 <Solution>
-  <Folder Name="/submodules/" />
-  <Folder Name="/submodules/PropertyTools/">
-    <Project Path="submodules/PropertyTools/Source/PropertyTools.Wpf/PropertyTools.Wpf.csproj" />
-    <Project Path="submodules/PropertyTools/Source/PropertyTools/PropertyTools.csproj" />
+  <Folder Name="/3rdParty/">
+    <Project Path="../PropertyTools/Source/PropertyTools.Wpf/PropertyTools.Wpf.csproj" />
+    <Project Path="../PropertyTools/Source/PropertyTools/PropertyTools.csproj" />
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="tests/Dev.Core.Tests/Dev.Core.Tests.csproj" />
