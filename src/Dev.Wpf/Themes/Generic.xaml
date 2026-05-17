@@ -6,6 +6,22 @@
     xmlns:behaviors="clr-namespace:Dev.Wpf.Behaviors"
     xmlns:toolbarCore="clr-namespace:Dev.Core.Toolbar;assembly=Dev.Core">
 
+    <Style TargetType="StatusBar">
+        <Setter Property="Background"
+            Value="{DynamicResource Toolbar.Background}" />
+
+        <Setter Property="BorderBrush"
+            Value="{DynamicResource Toolbar.Border}" />
+
+        <Setter Property="BorderThickness" Value="1,1,1,0" />
+
+        <Setter Property="Foreground"
+            Value="{DynamicResource ToolbarItem.Foreground}" />
+
+        <Setter Property="Padding" Value="6,2"/>
+    </Style>
+
+    
     <!--  Default (design-time) style for WinFormsButton.  -->
     <!--  At runtime this is superseded by WinFormsButtonStyle.{theme}.xaml loaded by ThemeManager.  -->
     <Style TargetType="{x:Type controls:WinFormsButton}">
@@ -63,18 +79,131 @@
     <Style TargetType="{x:Type controls:MenuHostControl}">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{DynamicResource ControlForegroundBrush}" />
+
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type controls:MenuHostControl}">
+
                     <Menu
-                        Background="{TemplateBinding Background}"
-                        Foreground="{TemplateBinding Foreground}"
-                        ItemsSource="{Binding ProjectedItems, RelativeSource={RelativeSource TemplatedParent}}" />
+                          Background="{TemplateBinding Background}"
+                          Foreground="{TemplateBinding Foreground}"
+                          ItemsSource="{Binding ProjectedItems, RelativeSource={RelativeSource TemplatedParent}}">
+
+                        <Menu.Resources>
+
+                            <!-- ✅ Fully owned MenuItem styling -->
+                            <Style TargetType="MenuItem">
+
+                                <!-- Match toolbar density -->
+                                <Setter Property="Padding" Value="6,2"/>
+                                <Setter Property="Margin" Value="0"/>
+
+                                <!-- Theme -->
+                                <Setter Property="Background" Value="{DynamicResource Toolbar.Background}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource ToolbarItem.Foreground}"/>
+
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="MenuItem">
+
+                                            <Grid>
+
+                                                <!-- ===== Root Layout ===== -->
+                                                <Border x:Name="Root" Background="{TemplateBinding Background}">
+
+                                                    <Grid Margin="{TemplateBinding Padding}">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition x:Name="IconColumn" Width="20"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <!-- Icon -->
+                                                        <ContentPresenter
+                                                            x:Name="IconPresenter"
+                                                            Grid.Column="0"
+                                                            VerticalAlignment="Center"
+                                                            HorizontalAlignment="Center"
+                                                            ContentSource="Icon"/>
+
+                                                        <!-- Header -->
+                                                        <ContentPresenter
+                                                            Grid.Column="1"
+                                                            Margin="4,0"
+                                                            VerticalAlignment="Center"
+                                                            RecognizesAccessKey="True"
+                                                            ContentSource="Header"/>
+
+                                                        <!-- Shortcut text -->
+                                                        <TextBlock
+                                                            Grid.Column="2"
+                                                            Margin="8,0,4,0"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="{TemplateBinding Foreground}"
+                                                            Text="{TemplateBinding InputGestureText}"/>
+
+                                                    </Grid>
+
+                                                </Border>
+
+                                                <!-- ===== Submenu Popup ===== -->
+                                                <Popup x:Name="PART_Popup"
+                                                     Placement="Bottom"
+                                                     AllowsTransparency="True"
+                                                     IsOpen="{TemplateBinding IsSubmenuOpen}">
+
+                                                    <Border
+                                                      Background="{DynamicResource Toolbar.Background}"
+                                                      BorderBrush="{DynamicResource Toolbar.Border}"
+                                                      BorderThickness="1">
+
+                                                        <StackPanel IsItemsHost="True"/>
+
+                                                    </Border>
+
+                                                </Popup>
+
+                                            </Grid>
+
+                                            <!-- ===== Behavior ===== -->
+                                            <ControlTemplate.Triggers>
+
+                                                <!-- Hover -->
+                                                <Trigger Property="IsHighlighted" Value="True">
+                                                    <Setter TargetName="Root" Property="Background" Value="{DynamicResource ToolbarItem.Background.Hover}"/>
+                                                </Trigger>
+
+                                                <!-- Disabled -->
+                                                <Trigger Property="IsEnabled" Value="False">
+                                                    <Setter Property="Opacity" Value="0.6"/>
+                                                </Trigger>
+
+                                                <Trigger Property="Role" Value="TopLevelHeader">
+                                                    <!-- Kill all left padding / icon layout -->
+                                                    <Setter TargetName="IconColumn" Property="Width" Value="0"/>
+                                                    <Setter TargetName="IconPresenter" Property="Visibility" Value="Collapsed"/>
+
+                                                    <!-- Tighten spacing to match WinForms-style menus -->
+                                                    <Setter Property="Padding" Value="8,2"/>
+                                                </Trigger>
+                                                
+                                            </ControlTemplate.Triggers>
+
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+
+                            </Style>
+
+                        </Menu.Resources>
+
+                    </Menu>
+
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
-
+    
     <!--
         ═══════════════════════════════════════════════════════════════════
         ToolbarHostControl — Phase 2 (Core ToolbarItem projection)
@@ -85,6 +214,12 @@
     -->
     <Style TargetType="{x:Type controls:ToolbarHostControl}">
         <Style.Resources>
+
+            <Style x:Key="ToolbarIconStyle" TargetType="Image">
+                <Setter Property="Width" Value="16"/>
+                <Setter Property="Height" Value="16"/>
+                <Setter Property="Stretch" Value="Uniform"/>
+            </Style>
 
             <Style x:Key="ToolbarCompactCheckBoxStyle"
                    TargetType="CheckBox">
@@ -142,9 +277,271 @@
                     </Setter.Value>
                 </Setter>
             </Style>
+
+            <Style x:Key="ToolbarLabelStyle" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{DynamicResource ToolbarItem.Foreground}" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                <Setter Property="Margin" Value="4,0,4,0" />
+
+                <Style.Triggers>
+
+                    <!-- Disabled (inherits from parent button) -->
+                    <DataTrigger Binding="{Binding IsEnabled}" Value="False">
+                        <Setter Property="Opacity" Value="0.6"/>
+                    </DataTrigger>
+
+                </Style.Triggers>
+            </Style>
+
+            <Style x:Key="ToolbarButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="{DynamicResource ToolbarItem.Background.Normal}" />
+                <Setter Property="Foreground" Value="{DynamicResource ToolbarItem.Foreground}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource Toolbar.Border}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="MinHeight" Value="20" />
+                <Setter Property="Margin" Value="2,2" />
+                <Setter Property="Padding" Value="4" />
+
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="3">
+
+                                <ContentPresenter
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                            </Border>
+
+                            <ControlTemplate.Triggers>
+
+                                <!-- Hover -->
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Root" Property="Background"
+                                        Value="{DynamicResource ToolbarItem.Background.Hover}" />
+                                </Trigger>
+
+                                <!-- Pressed -->
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="Root" Property="Background"
+                                        Value="{DynamicResource ToolbarItem.Background.Pressed}" />
+                                </Trigger>
+
+                                <!-- Disabled -->
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.6"/>
+                                </Trigger>
+
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="ToolbarToggleButtonStyle" TargetType="ToggleButton">
+                <Setter Property="Background" Value="{DynamicResource ToolbarItem.Background.Normal}" />
+                <Setter Property="Foreground" Value="{DynamicResource ToolbarItem.Foreground}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource Toolbar.Border}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="MinHeight" Value="20" />
+                <Setter Property="Margin" Value="2,2" />
+                <Setter Property="Padding" Value="4" />
+
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ToggleButton">
+                            <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="3">
+
+                                <ContentPresenter
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                            </Border>
+
+                            <ControlTemplate.Triggers>
+
+                                <!-- Checked -->
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="Root" Property="Background"
+                                        Value="{DynamicResource ToolbarItem.Background.Checked}" />
+                                    <Setter Property="Foreground"
+                                        Value="{DynamicResource ToolbarItem.Foreground.Checked}" />
+                                </Trigger>
+
+                                <!-- Hover -->
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Root" Property="Background"
+                                        Value="{DynamicResource ToolbarItem.Background.Hover}" />
+                                </Trigger>
+
+                                <!-- Pressed -->
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="Root" Property="Background"
+                                        Value="{DynamicResource ToolbarItem.Background.Pressed}" />
+                                </Trigger>
+
+                                <!-- Disabled -->
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.6"/>
+                                </Trigger>
+
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="ToolbarComboBoxStyle" TargetType="ComboBox">
+
+                <Setter Property="Background" Value="{DynamicResource ToolbarItem.Background.Normal}" />
+                <Setter Property="Foreground" Value="{DynamicResource ToolbarItem.Foreground}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource Toolbar.Border}" />
+                <Setter Property="TextElement.Foreground" Value="{DynamicResource ToolbarItem.Foreground}" />
+                <Setter Property="TextElement.Background" Value="{DynamicResource Toolbar.Background}" />
+
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Padding" Value="4"/>
+                <Setter Property="Margin" Value="2,2"/>
+
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ComboBox">
+
+                            <Grid>
+
+                                <ToggleButton x:Name="MainToggle"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+
+
+                                    <ToggleButton.Template>
+                                        <ControlTemplate TargetType="ToggleButton">
+                                            <Border
+                                                x:Name="Root"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}">
+
+                                                <ContentPresenter/>
+                                            </Border>
+
+                                            <ControlTemplate.Triggers>
+
+                                                <!-- ✅ Hover -->
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Root"
+                                                        Property="Background"
+                                                        Value="{DynamicResource ToolbarItem.Background.Hover}" />
+                                                </Trigger>
+
+                                                <!-- ✅ Open / Checked -->
+                                                <Trigger Property="IsChecked" Value="True">
+                                                    <Setter TargetName="Root"
+                                                        Property="Background"
+                                                        Value="{DynamicResource ToolbarItem.Background.Pressed}" />
+                                                </Trigger>
+
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </ToggleButton.Template>
+
+                                    <DockPanel>
+
+
+                                        <ContentPresenter
+                                            Margin="4,0,20,0"
+                                            VerticalAlignment="Center"
+                                            HorizontalAlignment="Left"
+                                            Content="{TemplateBinding SelectionBoxItem}"
+                                            RecognizesAccessKey="True">
+
+                                            <!-- ✅ THIS is the fix -->
+                                            <ContentPresenter.Resources>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource ToolbarItem.Foreground}" />
+                                                </Style>
+                                            </ContentPresenter.Resources>
+
+                                        </ContentPresenter>
+
+                                        <Path
+                                            DockPanel.Dock="Right"
+                                            Margin="4"
+                                            Width="8"
+                                            Height="4"
+                                            Data="M 0 0 L 4 4 L 8 0 Z"
+                                            Fill="{TemplateBinding Foreground}"
+                                            VerticalAlignment="Center"/>
+
+                                    </DockPanel>
+
+                                </ToggleButton>
+                                
+                                <Popup
+                                    Name="PART_Popup"
+                                    Placement="Bottom"
+                                    IsOpen="{TemplateBinding IsDropDownOpen}"
+                                    AllowsTransparency="True">
+
+                                    <Border
+                                        Background="{DynamicResource Toolbar.Background}"
+                                        BorderBrush="{DynamicResource Toolbar.Border}"
+                                        BorderThickness="1">
+
+                                        <ScrollViewer>
+                                            <ItemsPresenter/>
+                                        </ScrollViewer>
+
+                                    </Border>
+
+                                </Popup>
+
+                            </Grid>
+
+
+                            <ControlTemplate.Triggers>
+
+
+                                <Trigger SourceName="MainToggle" Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="MainToggle"
+                                        Property="Background"
+                                        Value="{DynamicResource ToolbarItem.Background.Hover}" />
+                                </Trigger>
+
+                                <!-- ✅ Hover -->
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="MainToggle"
+                                        Property="Background"
+                                        Value="{DynamicResource ToolbarItem.Background.Hover}" />
+                                </Trigger>
+
+                                <!-- ✅ Pressed / Open -->
+                                <Trigger Property="IsDropDownOpen" Value="True">
+                                    <Setter TargetName="MainToggle"
+                                        Property="Background"
+                                        Value="{DynamicResource ToolbarItem.Background.Pressed}" />
+                                </Trigger>
+
+                            </ControlTemplate.Triggers>
+
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            
         </Style.Resources>
-        <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Foreground" Value="{DynamicResource ControlForegroundBrush}" />
+        
+        <Setter Property="Background" Value="{DynamicResource Toolbar.Background}" />
+        <Setter Property="Foreground" Value="{DynamicResource Toolbar.Border}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type controls:ToolbarHostControl}">
@@ -156,13 +553,13 @@
 
                         <DataTemplate x:Key="ToolbarButtonTemplate" DataType="{x:Type toolbarCore:ToolbarItem}">
                             <Button
+                                Style="{StaticResource ToolbarButtonStyle}"
                                 Command="{Binding Command}"
                                 IsEnabled="{Binding IsEnabled}"
                                 ToolTip="{Binding SemanticMetadata.Text.AssistiveText}"
-                                Margin="2,2"
                                 Visibility="{Binding IsVisible, Converter={StaticResource ToolbarBoolToVisibilityConverter}}">
                                 <StackPanel Orientation="Horizontal">
-                                    <Image Visibility="{Binding DisplayIntent, Converter={StaticResource ToolbarDisplayIntentToVisibilityConverter}, ConverterParameter=Icon}">
+                                    <Image Style="{StaticResource ToolbarIconStyle}" Visibility="{Binding DisplayIntent, Converter={StaticResource ToolbarDisplayIntentToVisibilityConverter}, ConverterParameter=Icon}">
                                         <Image.Source>
                                             <MultiBinding Converter="{StaticResource ToolbarIconKeyToImageSourceConverter}">
                                                 <Binding Path="SemanticMetadata.IconKey" />
@@ -171,7 +568,7 @@
                                         </Image.Source>
                                     </Image>
                                     <TextBlock
-                                        Margin="4,0,0,0"
+                                        Margin="4,0,4,0"
                                         Text="{Binding Converter={StaticResource ToolbarItemLabelConverter}}"
                                         Visibility="{Binding DisplayIntent, Converter={StaticResource ToolbarDisplayIntentToVisibilityConverter}, ConverterParameter=Text}" />
                                 </StackPanel>
@@ -180,14 +577,15 @@
 
                         <DataTemplate x:Key="ToolbarToggleButtonTemplate" DataType="{x:Type toolbarCore:ToolbarItem}">
                             <ToggleButton
+                                Style="{StaticResource ToolbarToggleButtonStyle}"
                                 Command="{Binding Command}"
                                 IsChecked="{Binding IsChecked, Mode=OneWay}"
                                 IsEnabled="{Binding IsEnabled}"
-                                Margin="2,2"
+                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                 ToolTip="{Binding SemanticMetadata.Text.AssistiveText}"
                                 Visibility="{Binding IsVisible, Converter={StaticResource ToolbarBoolToVisibilityConverter}}">
-                                <StackPanel Orientation="Horizontal">
-                                    <Image Visibility="{Binding DisplayIntent, Converter={StaticResource ToolbarDisplayIntentToVisibilityConverter}, ConverterParameter=Icon}">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Image Style="{StaticResource ToolbarIconStyle}" Visibility="{Binding DisplayIntent, Converter={StaticResource ToolbarDisplayIntentToVisibilityConverter}, ConverterParameter=Icon}">
                                         <Image.Source>
                                             <MultiBinding Converter="{StaticResource ToolbarIconKeyToImageSourceConverter}">
                                                 <Binding Path="SemanticMetadata.IconKey" />
@@ -196,7 +594,7 @@
                                         </Image.Source>
                                     </Image>
                                     <TextBlock
-                                        Margin="4,0,0,0"
+                                        Margin="4,0,4,0"
                                         Text="{Binding SemanticMetadata.Text.Label}"
                                         Visibility="{Binding DisplayIntent, Converter={StaticResource ToolbarDisplayIntentToVisibilityConverter}, ConverterParameter=Text}" />
                                 </StackPanel>
@@ -213,7 +611,7 @@
                                 ToolTip="{Binding SemanticMetadata.Text.AssistiveText}"
                                 Visibility="{Binding IsVisible, Converter={StaticResource ToolbarBoolToVisibilityConverter}}">
                                 <StackPanel Orientation="Horizontal">
-                                    <Image Visibility="{Binding DisplayIntent, Converter={StaticResource ToolbarDisplayIntentToVisibilityConverter}, ConverterParameter=Icon}">
+                                    <Image Style="{StaticResource ToolbarIconStyle}" Visibility="{Binding DisplayIntent, Converter={StaticResource ToolbarDisplayIntentToVisibilityConverter}, ConverterParameter=Icon}">
                                         <Image.Source>
                                             <MultiBinding Converter="{StaticResource ToolbarIconKeyToImageSourceConverter}">
                                                 <Binding Path="SemanticMetadata.IconKey" />
@@ -233,10 +631,9 @@
                             <StackPanel
                                 IsEnabled="{Binding IsEnabled}"
                                 Orientation="Horizontal"
-                                Margin="2,2"
                                 ToolTip="{Binding SemanticMetadata.Text.AssistiveText}"
                                 Visibility="{Binding IsVisible, Converter={StaticResource ToolbarBoolToVisibilityConverter}}">
-                                <Image Visibility="{Binding DisplayIntent, Converter={StaticResource ToolbarDisplayIntentToVisibilityConverter}, ConverterParameter=Icon}">
+                                <Image Style="{StaticResource ToolbarIconStyle}" Visibility="{Binding DisplayIntent, Converter={StaticResource ToolbarDisplayIntentToVisibilityConverter}, ConverterParameter=Icon}">
                                     <Image.Source>
                                         <MultiBinding Converter="{StaticResource ToolbarIconKeyToImageSourceConverter}">
                                             <Binding Path="SemanticMetadata.IconKey" />
@@ -245,17 +642,18 @@
                                     </Image.Source>
                                 </Image>
                                 <TextBlock
-                                    Margin="4,0,0,0"
+                                    Style="{StaticResource ToolbarLabelStyle}"
                                     VerticalAlignment="Center"
                                     Text="{Binding SemanticMetadata.Text.Label}"
                                     Visibility="{Binding DisplayIntent, Converter={StaticResource ToolbarDisplayIntentToVisibilityConverter}, ConverterParameter=Text}" />
                             </StackPanel>
                         </DataTemplate>
 
+                        <!--Style="{StaticResource ToolbarComboBoxStyle}"-->
                         <DataTemplate x:Key="ToolbarComboBoxTemplate" DataType="{x:Type toolbarCore:ToolbarItem}">
                             <ComboBox
+                                Style="{StaticResource ToolbarComboBoxStyle}"
                                 IsEnabled="{Binding IsEnabled}"
-                                Margin="2,2"
                                 ItemsSource="{Binding SelectionItems}"
                                 SelectedItem="{Binding SelectedValue, Mode=OneWay}"
                                 ToolTip="{Binding SemanticMetadata.Text.AssistiveText}"
@@ -277,18 +675,25 @@
                             ToggleButtonTemplate="{StaticResource ToolbarToggleButtonTemplate}" />
                     </ControlTemplate.Resources>
 
-                    <Border Background="{TemplateBinding Background}">
-                        <ToolBarTray x:Name="PART_ToolBarTray" Background="{TemplateBinding Background}">
-                            <ToolBar x:Name="PART_ToolBar" Background="{TemplateBinding Background}" Foreground="{TemplateBinding Foreground}">
-                                <ItemsControl ItemTemplateSelector="{StaticResource ToolbarItemTemplateSelector}" ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource TemplatedParent}}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <StackPanel Orientation="Horizontal" />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                </ItemsControl>
-                            </ToolBar>
-                        </ToolBarTray>
+                    <Border Background="{TemplateBinding Background}" ClipToBounds="True">
+                        <ItemsControl
+                            x:Name="PART_ItemsHost"
+                            Foreground="{TemplateBinding Foreground}"
+                            ItemTemplateSelector="{StaticResource ToolbarItemTemplateSelector}"
+                            ItemsSource="{Binding ProjectedItems, RelativeSource={RelativeSource TemplatedParent}}">
+                            <ItemsControl.Template>
+                                <ControlTemplate TargetType="ItemsControl">
+                                    <Border ClipToBounds="True">
+                                        <ItemsPresenter />
+                                    </Border>
+                                </ControlTemplate>
+                            </ItemsControl.Template>
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>

@@ -61,7 +61,6 @@ namespace Dev.Wpf.Themes
 
         public static void ApplyTheme(ThemeMode theme)
         {
-#pragma warning disable WPF0001
             switch (theme)
             {
                 case ThemeMode.Dark:
@@ -78,7 +77,6 @@ namespace Dev.Wpf.Themes
                         ApplyTheme(ThemeMode.Light);
                     break;
             }
-#pragma warning restore WPF0001
         }
     }
 }
