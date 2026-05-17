@@ -228,6 +228,114 @@ public sealed class ToolbarHostControlTemplateTests
     }
 
     [Test]
+    public void DropDownProjection_RendersRootMenuItem_WithCommandMappedChildren()
+    {
+        var childCommand = new TestCommand();
+        var nestedChildCommand = new TestCommand();
+
+        var nestedChild = new ToolbarItem(
+            new ToolbarItemId("Build.NestedLeaf"),
+            ToolbarItemKind.Button,
+            new ToolbarItemSemanticMetadata(new ToolbarItemText("Nested Leaf")),
+            ToolbarItemDisplayIntent.TextOnly,
+            command: nestedChildCommand);
+
+        var childWithChildren = new ToolbarItem(
+            new ToolbarItemId("Build.NestedParent"),
+            ToolbarItemKind.SplitDropDown,
+            new ToolbarItemSemanticMetadata(new ToolbarItemText("Nested Parent")),
+            ToolbarItemDisplayIntent.TextOnly,
+            command: new TestCommand(),
+            children: new[] { nestedChild });
+
+        var directChild = new ToolbarItem(
+            new ToolbarItemId("Build.Run"),
+            ToolbarItemKind.Button,
+            new ToolbarItemSemanticMetadata(new ToolbarItemText("Run")),
+            ToolbarItemDisplayIntent.TextOnly,
+            command: childCommand);
+
+        var dropDown = new ToolbarItem(
+            new ToolbarItemId("Build.Actions"),
+            ToolbarItemKind.DropDown,
+            new ToolbarItemSemanticMetadata(new ToolbarItemText("Actions")),
+            ToolbarItemDisplayIntent.TextOnly,
+            children: new[] { directChild, childWithChildren });
+
+        var control = new ToolbarHostControl
+        {
+            ItemsSource = new[] { dropDown },
+        };
+
+        using var host = new TemplateTestHost(control);
+
+        var rootMenuItem = TemplateTestHost.FindChild<MenuItem>(control);
+
+        Assert.That(rootMenuItem, Is.Not.Null);
+        Assert.That(rootMenuItem!.Header, Is.EqualTo("Actions"));
+        Assert.That(rootMenuItem.Command, Is.Null);
+
+        rootMenuItem.IsSubmenuOpen = true;
+        control.UpdateLayout();
+
+        var firstChildContainer = rootMenuItem.ItemContainerGenerator.ContainerFromIndex(0) as MenuItem;
+        Assert.That(firstChildContainer, Is.Not.Null);
+        Assert.That(firstChildContainer!.Header, Is.EqualTo("Run"));
+        Assert.That(firstChildContainer.Command, Is.SameAs(childCommand));
+
+        var secondChildContainer = rootMenuItem.ItemContainerGenerator.ContainerFromIndex(1) as MenuItem;
+        Assert.That(secondChildContainer, Is.Not.Null);
+
+        secondChildContainer!.IsSubmenuOpen = true;
+        control.UpdateLayout();
+
+        var nestedChildContainer = secondChildContainer.ItemContainerGenerator.ContainerFromIndex(0) as MenuItem;
+        Assert.That(nestedChildContainer, Is.Not.Null);
+        Assert.That(nestedChildContainer!.Header, Is.EqualTo("Nested Leaf"));
+        Assert.That(nestedChildContainer.Command, Is.SameAs(nestedChildCommand));
+    }
+
+    [Test]
+    public void SplitDropDownProjection_MainButtonClick_ExecutesPrimaryCommand()
+    {
+        var primaryCommand = new TestCommand();
+
+        var splitDropDown = new ToolbarItem(
+            new ToolbarItemId("Build.Split"),
+            ToolbarItemKind.SplitDropDown,
+            new ToolbarItemSemanticMetadata(new ToolbarItemText("Split")),
+            ToolbarItemDisplayIntent.TextOnly,
+            command: primaryCommand,
+            children: new[]
+            {
+                new ToolbarItem(
+                    new ToolbarItemId("Build.Child"),
+                    ToolbarItemKind.Button,
+                    new ToolbarItemSemanticMetadata(new ToolbarItemText("Child")),
+                    ToolbarItemDisplayIntent.TextOnly,
+                    command: new TestCommand())
+            });
+
+        var control = new ToolbarHostControl
+        {
+            ItemsSource = new[] { splitDropDown },
+        };
+
+        using var host = new TemplateTestHost(control);
+
+        var button = TemplateTestHost.FindAllChildren<Button>(control)
+            .FirstOrDefault(candidate => ReferenceEquals(candidate.Command, primaryCommand));
+
+        Assert.That(button, Is.Not.Null);
+
+        Assert.That(button!.Command, Is.SameAs(primaryCommand));
+
+        button.Command!.Execute(null);
+
+        Assert.That(primaryCommand.ExecuteCount, Is.EqualTo(1));
+    }
+
+    [Test]
     public void ButtonProjection_ReplacedItems_RefreshesLabelText()
     {
         var items = new ObservableCollection<ToolbarItem>
@@ -859,6 +967,8 @@ public sealed class ToolbarHostControlTemplateTests
 
     private sealed class TestCommand : System.Windows.Input.ICommand
     {
+        public int ExecuteCount { get; private set; }
+
         public event EventHandler? CanExecuteChanged
         {
             add { }
@@ -867,7 +977,11 @@ public sealed class ToolbarHostControlTemplateTests
 
         public bool CanExecute(object? parameter) => true;
 
-        public void Execute(object? parameter) { }
+        public void Execute(object? parameter)
+        {
+            _ = parameter;
+            ExecuteCount++;
+        }
     }
 
     private static ToolbarItem CreateButtonItem(string id, int order, string tooltip, string? logicalGroup)

@@ -9,6 +9,8 @@ namespace Dev.Core.Toolbar;
 public enum ToolbarItemKind
 {
     Button,
+    DropDown,
+    SplitDropDown,
     ToggleButton,
     CheckBox,
     Label,
