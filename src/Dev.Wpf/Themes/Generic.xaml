@@ -575,6 +575,87 @@
                             </Button>
                         </DataTemplate>
 
+                        <DataTemplate x:Key="ToolbarDropDownTemplate" DataType="{x:Type toolbarCore:ToolbarItem}">
+                            <Menu
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Focusable="False"
+                                IsEnabled="{Binding IsEnabled}"
+                                Visibility="{Binding IsVisible, Converter={StaticResource ToolbarBoolToVisibilityConverter}}">
+                                <Menu.Resources>
+                                    <Style TargetType="MenuItem">
+                                        <Setter Property="Header" Value="{Binding SemanticMetadata.Text.Label}" />
+                                        <Setter Property="Command" Value="{Binding Command}" />
+                                        <Setter Property="ItemsSource" Value="{Binding Children}" />
+                                        <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
+                                        <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource ToolbarBoolToVisibilityConverter}}" />
+                                    </Style>
+                                </Menu.Resources>
+
+                                <MenuItem
+                                    Header="{Binding SemanticMetadata.Text.Label}"
+                                    Command="{x:Null}"
+                                    ItemsSource="{Binding Children}"
+                                    ToolTip="{Binding SemanticMetadata.Text.AssistiveText}" />
+                            </Menu>
+                        </DataTemplate>
+
+                        <DataTemplate x:Key="ToolbarSplitDropDownTemplate" DataType="{x:Type toolbarCore:ToolbarItem}">
+                            <Grid
+                                IsEnabled="{Binding IsEnabled}"
+                                Visibility="{Binding IsVisible, Converter={StaticResource ToolbarBoolToVisibilityConverter}}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Button
+                                    Grid.Column="0"
+                                    Style="{StaticResource ToolbarButtonStyle}"
+                                    Command="{Binding Command}"
+                                    IsEnabled="{Binding IsEnabled}"
+                                    ToolTip="{Binding SemanticMetadata.Text.AssistiveText}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Image Style="{StaticResource ToolbarIconStyle}" Visibility="{Binding DisplayIntent, Converter={StaticResource ToolbarDisplayIntentToVisibilityConverter}, ConverterParameter=Icon}">
+                                            <Image.Source>
+                                                <MultiBinding Converter="{StaticResource ToolbarIconKeyToImageSourceConverter}">
+                                                    <Binding Path="SemanticMetadata.IconKey" />
+                                                    <Binding Path="IconProvider" RelativeSource="{RelativeSource AncestorType=controls:ToolbarHostControl}" />
+                                                </MultiBinding>
+                                            </Image.Source>
+                                        </Image>
+                                        <TextBlock
+                                            Margin="4,0,4,0"
+                                            Text="{Binding Converter={StaticResource ToolbarItemLabelConverter}}"
+                                            Visibility="{Binding DisplayIntent, Converter={StaticResource ToolbarDisplayIntentToVisibilityConverter}, ConverterParameter=Text}" />
+                                    </StackPanel>
+                                </Button>
+
+                                <Menu
+                                    Grid.Column="1"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Focusable="False"
+                                    IsEnabled="{Binding IsEnabled}">
+                                    <Menu.Resources>
+                                        <Style TargetType="MenuItem">
+                                            <Setter Property="Header" Value="{Binding SemanticMetadata.Text.Label}" />
+                                            <Setter Property="Command" Value="{Binding Command}" />
+                                            <Setter Property="ItemsSource" Value="{Binding Children}" />
+                                            <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
+                                            <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource ToolbarBoolToVisibilityConverter}}" />
+                                        </Style>
+                                    </Menu.Resources>
+
+                                    <MenuItem
+                                        Header="▼"
+                                        Command="{x:Null}"
+                                        ItemsSource="{Binding Children}"
+                                        ToolTip="{Binding SemanticMetadata.Text.AssistiveText}" />
+                                </Menu>
+                            </Grid>
+                        </DataTemplate>
+
                         <DataTemplate x:Key="ToolbarToggleButtonTemplate" DataType="{x:Type toolbarCore:ToolbarItem}">
                             <ToggleButton
                                 Style="{StaticResource ToolbarToggleButtonStyle}"
@@ -670,8 +751,10 @@
                             ButtonTemplate="{StaticResource ToolbarButtonTemplate}"
                             CheckBoxTemplate="{StaticResource ToolbarCheckBoxTemplate}"
                             ComboBoxTemplate="{StaticResource ToolbarComboBoxTemplate}"
+                            DropDownTemplate="{StaticResource ToolbarDropDownTemplate}"
                             LabelTemplate="{StaticResource ToolbarLabelTemplate}"
                             SeparatorTemplate="{StaticResource ToolbarSeparatorTemplate}"
+                            SplitDropDownTemplate="{StaticResource ToolbarSplitDropDownTemplate}"
                             ToggleButtonTemplate="{StaticResource ToolbarToggleButtonTemplate}" />
                     </ControlTemplate.Resources>
 

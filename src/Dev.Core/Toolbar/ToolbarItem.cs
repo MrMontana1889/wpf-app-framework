@@ -27,6 +27,8 @@ public sealed class ToolbarItem : INotifyPropertyChanged
 
     public IReadOnlyList<object>? SelectionItems { get; }
 
+    public IReadOnlyList<ToolbarItem>? Children { get; }
+
     private bool _isVisible;
     public bool IsVisible
     {
@@ -110,14 +112,15 @@ public sealed class ToolbarItem : INotifyPropertyChanged
         IReadOnlyList<object>? selectionItems = null,
         object? selectedValue = null,
         bool includeInMenuBar = true,
-        string? logicalGroup = null)
+        string? logicalGroup = null,
+        IReadOnlyList<ToolbarItem>? children = null)
     {
         if (id.Value is null)
             throw new ArgumentException("Toolbar item id must be initialized.", nameof(id));
 
         ArgumentNullException.ThrowIfNull(semanticMetadata);
 
-        ValidateKindConfiguration(kind, command, isChecked, selectionItems, selectedValue);
+        ValidateKindConfiguration(kind, command, isChecked, selectionItems, selectedValue, children);
 
         Id = id;
         Kind = kind;
@@ -135,6 +138,10 @@ public sealed class ToolbarItem : INotifyPropertyChanged
         SelectionItems = selectionItems is null
             ? null
             : selectionItems.ToArray();
+
+        Children = children is null
+            ? null
+            : children.ToArray();
     }
 
     public void SetChecked(bool isChecked)
@@ -163,13 +170,19 @@ public sealed class ToolbarItem : INotifyPropertyChanged
         ICommand? command,
         bool? isChecked,
         IReadOnlyList<object>? selectionItems,
-        object? selectedValue)
+        object? selectedValue,
+        IReadOnlyList<ToolbarItem>? children)
     {
+        var hasChildren = children is { Count: > 0 };
+
         switch (kind)
         {
             case ToolbarItemKind.Button:
                 if (command is null)
                     throw new ArgumentException("Button items require a command.", nameof(command));
+
+                if (hasChildren)
+                    throw new ArgumentException("Button items do not support child items.", nameof(children));
 
                 if (isChecked is not null)
                     throw new ArgumentException("Button items do not support checked state.", nameof(isChecked));
@@ -182,9 +195,48 @@ public sealed class ToolbarItem : INotifyPropertyChanged
 
                 break;
 
+            case ToolbarItemKind.DropDown:
+                if (command is not null)
+                    throw new ArgumentException("DropDown items do not support command association.", nameof(command));
+
+                if (!hasChildren)
+                    throw new ArgumentException("DropDown items require one or more child items.", nameof(children));
+
+                if (isChecked is not null)
+                    throw new ArgumentException("DropDown items do not support checked state.", nameof(isChecked));
+
+                if (selectionItems is not null)
+                    throw new ArgumentException("DropDown items do not support selection items.", nameof(selectionItems));
+
+                if (selectedValue is not null)
+                    throw new ArgumentException("DropDown items do not support selected values.", nameof(selectedValue));
+
+                break;
+
+            case ToolbarItemKind.SplitDropDown:
+                if (command is null)
+                    throw new ArgumentException("SplitDropDown items require a command.", nameof(command));
+
+                if (!hasChildren)
+                    throw new ArgumentException("SplitDropDown items require one or more child items.", nameof(children));
+
+                if (isChecked is not null)
+                    throw new ArgumentException("SplitDropDown items do not support checked state.", nameof(isChecked));
+
+                if (selectionItems is not null)
+                    throw new ArgumentException("SplitDropDown items do not support selection items.", nameof(selectionItems));
+
+                if (selectedValue is not null)
+                    throw new ArgumentException("SplitDropDown items do not support selected values.", nameof(selectedValue));
+
+                break;
+
             case ToolbarItemKind.ToggleButton:
                 if (command is null)
                     throw new ArgumentException("ToggleButton items require a command.", nameof(command));
+
+                if (hasChildren)
+                    throw new ArgumentException("ToggleButton items do not support child items.", nameof(children));
 
                 if (isChecked is null)
                     throw new ArgumentException("ToggleButton items require an initial checked state.", nameof(isChecked));
@@ -198,6 +250,9 @@ public sealed class ToolbarItem : INotifyPropertyChanged
                 break;
 
             case ToolbarItemKind.CheckBox:
+                if (hasChildren)
+                    throw new ArgumentException("CheckBox items do not support child items.", nameof(children));
+
                 if (isChecked is null)
                     throw new ArgumentException("CheckBox items require an initial checked state.", nameof(isChecked));
 
@@ -210,6 +265,9 @@ public sealed class ToolbarItem : INotifyPropertyChanged
                 break;
 
             case ToolbarItemKind.ComboBox:
+                if (hasChildren)
+                    throw new ArgumentException("ComboBox items do not support child items.", nameof(children));
+
                 if (isChecked is not null)
                     throw new ArgumentException("ComboBox items do not support checked state.", nameof(isChecked));
 
@@ -223,6 +281,9 @@ public sealed class ToolbarItem : INotifyPropertyChanged
 
             case ToolbarItemKind.Label:
             case ToolbarItemKind.Separator:
+                if (hasChildren)
+                    throw new ArgumentException($"{kind} items do not support child items.", nameof(children));
+
                 if (command is not null)
                     throw new ArgumentException($"{kind} items do not support command association.", nameof(command));
 

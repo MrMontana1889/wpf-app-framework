@@ -23,6 +23,28 @@ public sealed class ToolbarItemTemplateSelectorTests
     }
 
     [Test]
+    public void SelectTemplate_DropDown_ReturnsDropDownTemplate()
+    {
+        var dropDownTemplate = new DataTemplate();
+        var selector = CreateSelector(dropDownTemplate: dropDownTemplate);
+
+        var template = selector.SelectTemplate(CreateDropDownItem(), new DependencyObject());
+
+        Assert.That(template, Is.SameAs(dropDownTemplate));
+    }
+
+    [Test]
+    public void SelectTemplate_SplitDropDown_ReturnsSplitDropDownTemplate()
+    {
+        var splitDropDownTemplate = new DataTemplate();
+        var selector = CreateSelector(splitDropDownTemplate: splitDropDownTemplate);
+
+        var template = selector.SelectTemplate(CreateSplitDropDownItem(), new DependencyObject());
+
+        Assert.That(template, Is.SameAs(splitDropDownTemplate));
+    }
+
+    [Test]
     public void SelectTemplate_ToggleButton_ReturnsToggleButtonTemplate()
     {
         var toggleTemplate = new DataTemplate();
@@ -109,6 +131,8 @@ public sealed class ToolbarItemTemplateSelectorTests
 
     private static ToolbarItemTemplateSelector CreateSelector(
         DataTemplate? buttonTemplate = null,
+        DataTemplate? dropDownTemplate = null,
+        DataTemplate? splitDropDownTemplate = null,
         DataTemplate? toggleButtonTemplate = null,
         DataTemplate? checkBoxTemplate = null,
         DataTemplate? labelTemplate = null,
@@ -118,6 +142,8 @@ public sealed class ToolbarItemTemplateSelectorTests
         return new ToolbarItemTemplateSelector
         {
             ButtonTemplate = buttonTemplate,
+            DropDownTemplate = dropDownTemplate,
+            SplitDropDownTemplate = splitDropDownTemplate,
             ToggleButtonTemplate = toggleButtonTemplate,
             CheckBoxTemplate = checkBoxTemplate,
             LabelTemplate = labelTemplate,
@@ -133,6 +159,23 @@ public sealed class ToolbarItemTemplateSelectorTests
             CreateMetadata(),
             ToolbarItemDisplayIntent.IconAndText,
             command: new TestCommand());
+
+    private static ToolbarItem CreateDropDownItem() =>
+        new(
+            new ToolbarItemId("Build.Actions"),
+            ToolbarItemKind.DropDown,
+            CreateMetadata(),
+            ToolbarItemDisplayIntent.IconAndText,
+            children: [CreateButtonItem()]);
+
+    private static ToolbarItem CreateSplitDropDownItem() =>
+        new(
+            new ToolbarItemId("Build.Split"),
+            ToolbarItemKind.SplitDropDown,
+            CreateMetadata(),
+            ToolbarItemDisplayIntent.IconAndText,
+            command: new TestCommand(),
+            children: [CreateButtonItem()]);
 
     private static ToolbarItemSemanticMetadata CreateMetadata() =>
         new(new ToolbarItemText("Build", "Run build"), new IconKey("build"));

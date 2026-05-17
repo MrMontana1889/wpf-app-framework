@@ -13,6 +13,8 @@ namespace Dev.Wpf.Controls;
 public sealed class ToolbarItemTemplateSelector : DataTemplateSelector
 {
     public DataTemplate? ButtonTemplate { get; set; }
+    public DataTemplate? DropDownTemplate { get; set; }
+    public DataTemplate? SplitDropDownTemplate { get; set; }
     public DataTemplate? ToggleButtonTemplate { get; set; }
     public DataTemplate? CheckBoxTemplate { get; set; }
     public DataTemplate? LabelTemplate { get; set; }
@@ -27,6 +29,8 @@ public sealed class ToolbarItemTemplateSelector : DataTemplateSelector
         return toolbarItem.Kind switch
         {
             ToolbarItemKind.Button => ButtonTemplate,
+            ToolbarItemKind.DropDown => DropDownTemplate,
+            ToolbarItemKind.SplitDropDown => SplitDropDownTemplate,
             ToolbarItemKind.ToggleButton => ToggleButtonTemplate,
             ToolbarItemKind.CheckBox => CheckBoxTemplate,
             ToolbarItemKind.Label => LabelTemplate,

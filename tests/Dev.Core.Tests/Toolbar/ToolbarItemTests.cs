@@ -73,6 +73,128 @@ public class ToolbarItemTests
     }
 
     [Test]
+    public void Constructor_ButtonWithChildren_Throws()
+    {
+        var children = new[] { CreateChildButton("Build.Child") };
+
+        Assert.Throws<ArgumentException>(() =>
+            _ = new ToolbarItem(
+                new ToolbarItemId("Build.Run"),
+                ToolbarItemKind.Button,
+                CreateSemanticMetadata(),
+                ToolbarItemDisplayIntent.IconAndText,
+                command: new TestCommand(),
+                children: children));
+    }
+
+    [Test]
+    public void Constructor_DropDownWithoutChildren_Throws()
+    {
+        Assert.Throws<ArgumentException>(() =>
+            _ = new ToolbarItem(
+                new ToolbarItemId("Build.Actions"),
+                ToolbarItemKind.DropDown,
+                CreateSemanticMetadata(),
+                ToolbarItemDisplayIntent.IconAndText));
+    }
+
+    [Test]
+    public void Constructor_DropDownWithCommand_Throws()
+    {
+        var children = new[] { CreateChildButton("Build.Child") };
+
+        Assert.Throws<ArgumentException>(() =>
+            _ = new ToolbarItem(
+                new ToolbarItemId("Build.Actions"),
+                ToolbarItemKind.DropDown,
+                CreateSemanticMetadata(),
+                ToolbarItemDisplayIntent.IconAndText,
+                command: new TestCommand(),
+                children: children));
+    }
+
+    [Test]
+    public void Constructor_DropDownWithChildren_AssignsChildren()
+    {
+        var children = new[] { CreateChildButton("Build.Child") };
+
+        var item = new ToolbarItem(
+            new ToolbarItemId("Build.Actions"),
+            ToolbarItemKind.DropDown,
+            CreateSemanticMetadata(),
+            ToolbarItemDisplayIntent.IconAndText,
+            children: children);
+
+        Assert.That(item.Children, Is.Not.Null);
+        Assert.That(item.Children, Has.Count.EqualTo(1));
+    }
+
+    [Test]
+    public void Constructor_SplitDropDownWithoutCommand_Throws()
+    {
+        var children = new[] { CreateChildButton("Build.Child") };
+
+        Assert.Throws<ArgumentException>(() =>
+            _ = new ToolbarItem(
+                new ToolbarItemId("Build.Split"),
+                ToolbarItemKind.SplitDropDown,
+                CreateSemanticMetadata(),
+                ToolbarItemDisplayIntent.IconAndText,
+                children: children));
+    }
+
+    [Test]
+    public void Constructor_SplitDropDownWithoutChildren_Throws()
+    {
+        Assert.Throws<ArgumentException>(() =>
+            _ = new ToolbarItem(
+                new ToolbarItemId("Build.Split"),
+                ToolbarItemKind.SplitDropDown,
+                CreateSemanticMetadata(),
+                ToolbarItemDisplayIntent.IconAndText,
+                command: new TestCommand()));
+    }
+
+    [Test]
+    public void Constructor_SplitDropDownWithCommandAndChildren_AssignsChildren()
+    {
+        var children = new[] { CreateChildButton("Build.Child") };
+
+        var item = new ToolbarItem(
+            new ToolbarItemId("Build.Split"),
+            ToolbarItemKind.SplitDropDown,
+            CreateSemanticMetadata(),
+            ToolbarItemDisplayIntent.IconAndText,
+            command: new TestCommand(),
+            children: children);
+
+        Assert.That(item.Children, Is.Not.Null);
+        Assert.That(item.Children, Has.Count.EqualTo(1));
+    }
+
+    [Test]
+    public void Constructor_Children_AreDefensivelyCopied()
+    {
+        var children = new List<ToolbarItem>
+        {
+            CreateChildButton("Build.Child1"),
+            CreateChildButton("Build.Child2")
+        };
+
+        var item = new ToolbarItem(
+            new ToolbarItemId("Build.Actions"),
+            ToolbarItemKind.DropDown,
+            CreateSemanticMetadata(),
+            ToolbarItemDisplayIntent.IconAndText,
+            children: children);
+
+        children.Clear();
+
+        Assert.That(item.Children, Is.Not.Null);
+        Assert.That(item.Children, Has.Count.EqualTo(2));
+    }
+
+    [Test]
     public void Constructor_ToggleButtonWithoutCommand_Throws()
     {
         Assert.Throws<ArgumentException>(() =>
@@ -290,5 +412,15 @@ public class ToolbarItemTests
         public bool CanExecute(object? parameter) => true;
 
         public void Execute(object? parameter) { }
+    }
+
+    private static ToolbarItem CreateChildButton(string id)
+    {
+        return new ToolbarItem(
+            new ToolbarItemId(id),
+            ToolbarItemKind.Button,
+            new ToolbarItemSemanticMetadata(new ToolbarItemText(id)),
+            ToolbarItemDisplayIntent.TextOnly,
+            command: new TestCommand());
     }
 }
