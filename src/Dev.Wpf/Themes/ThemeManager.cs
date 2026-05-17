@@ -1,9 +1,24 @@
+using Microsoft.Win32;
 using System.Windows;
 
 namespace Dev.Wpf.Themes
 {
     internal static class ThemeManager
     {
+        static ThemeManager()
+        {
+            SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
+        }
+
+        private static void OnUserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
+        {
+            if (e.Category == UserPreferenceCategory.General || e.Category == UserPreferenceCategory.VisualStyle ||
+                e.Category == UserPreferenceCategory.Color)
+            {
+                ApplySystemTheme();
+            }
+        }
+
         public static void ApplySystemTheme()
         {
             var theme = WindowsThemeDetector.GetWindowsAppTheme();
