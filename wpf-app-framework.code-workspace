@@ -3,7 +3,11 @@
 		{
       "name": "WPF App Framework",
 			"path": "../wpf-app-framework"
-		}
+		},
+    {
+      "name": "PropertyTools",
+      "path": "../PropertyTools"
+    }
   ],
   "settings": {
     "chat.tools.terminal.autoApprove": {

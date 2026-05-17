@@ -18,7 +18,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: recursive
+          path: wpf-app-framework
+
+      - name: Checkout PropertyTools
+        uses: actions/checkout@v4
+        with:
+          repository: PondPackMan2023/PropertyTools
+          path: PropertyTools
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
