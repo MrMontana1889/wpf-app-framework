@@ -13,9 +13,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\PropertyTools\Source\PropertyTools.Wpf\PropertyTools.Wpf.csproj" />
+    <ProjectReference Include="..\..\..\PropertyTools\Source\PropertyTools\PropertyTools.csproj" />
     <ProjectReference Include="..\Dev.Core\Dev.Core.csproj" />
-    <ProjectReference Include="..\..\submodules\PropertyTools\Source\PropertyTools.Wpf\PropertyTools.Wpf.csproj" />
-    <ProjectReference Include="..\..\submodules\PropertyTools\Source\PropertyTools\PropertyTools.csproj" />
   </ItemGroup>
 
 </Project>
