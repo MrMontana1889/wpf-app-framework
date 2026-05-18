@@ -5,9 +5,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <!--<ResourceDictionary Source="/Dev.Wpf;component/Themes/PropertyTools.Fluent.xaml" />-->
                 <ResourceDictionary Source="/Dev.Wpf;component/Themes/Generic.xaml" />
-                <!--<ResourceDictionary Source="/Dev.Wpf;component/Themes/Fluent.Density.xaml" />-->
             </ResourceDictionary.MergedDictionaries>
             <BitmapImage x:Key="ToolbarIcon.folder" UriSource="pack://application:,,,/Dev.Wpf.TestHost;component/Resources/Icons/Folder.ico" />
         </ResourceDictionary>
