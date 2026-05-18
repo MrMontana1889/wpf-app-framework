@@ -30,9 +30,9 @@
         <Setter Property="Height" Value="27" />
         <Setter Property="Padding" Value="4,0" />
         <Setter Property="Margin" Value="0,0,8,0" />
-        <Setter Property="Background" Value="White" />
-        <Setter Property="Foreground" Value="Black" />
-        <Setter Property="BorderBrush" Value="#C5D9F1" />
+        <Setter Property="Background" Value="{DynamicResource ToolbarButton.Background}" />
+        <Setter Property="Foreground" Value="{DynamicResource ToolbarButton.Foreground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ToolbarButton.Border}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Focusable" Value="False" />
         <Setter Property="Template">
@@ -51,17 +51,17 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="#F0F8FF" />
-                            <Setter Property="BorderBrush" Value="#99CCFF" />
+                            <Setter Property="Background" Value="{DynamicResource ToolbarItem.Background.Hover}" />
+                            <Setter Property="BorderBrush" Value="{DynamicResource ToolbarButton.MouseOver.Border}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter Property="Background" Value="#E6F0FF" />
-                            <Setter Property="BorderBrush" Value="#6699CC" />
+                            <Setter Property="Background" Value="{DynamicResource ToolbarButton.Pressed.Background}" />
+                            <Setter Property="BorderBrush" Value="{DynamicResource ToolbarButton.Pressed.Border}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Foreground" Value="{x:Static SystemColors.GrayTextBrush}" />
-                            <Setter Property="Background" Value="#F0F0F0" />
-                            <Setter Property="BorderBrush" Value="#D0D0D0" />
+                            <Setter Property="Background" Value="{DynamicResource ToolbarButton.Disabled.Background}" />
+                            <Setter Property="BorderBrush" Value="{DynamicResource ToolbarButton.Disabled.Border}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -95,8 +95,8 @@
                             <Style TargetType="MenuItem">
 
                                 <!-- Match toolbar density -->
-                                <Setter Property="Padding" Value="6,2"/>
-                                <Setter Property="Margin" Value="0"/>
+                                <Setter Property="Padding" Value="4"/>
+                                <Setter Property="Margin" Value="4,0,4,4"/>
 
                                 <!-- Theme -->
                                 <Setter Property="Background" Value="{DynamicResource Toolbar.Background}"/>
@@ -136,6 +136,7 @@
 
                                                         <!-- Shortcut text -->
                                                         <TextBlock
+                                                            x:Name="Shortcut"
                                                             Grid.Column="2"
                                                             Margin="8,0,4,0"
                                                             VerticalAlignment="Center"
@@ -184,7 +185,10 @@
                                                     <Setter TargetName="IconPresenter" Property="Visibility" Value="Collapsed"/>
 
                                                     <!-- Tighten spacing to match WinForms-style menus -->
-                                                    <Setter Property="Padding" Value="8,2"/>
+                                                    <Setter Property="Padding" Value="2"/>
+
+                                                    <Setter TargetName="Shortcut" Property="Width" Value="0" />
+                                                    <Setter TargetName="Shortcut" Property="Visibility" Value="Collapsed" />
                                                 </Trigger>
                                                 
                                             </ControlTemplate.Triggers>
@@ -216,6 +220,7 @@
         <Style.Resources>
 
             <Style x:Key="ToolbarIconStyle" TargetType="Image">
+                <Setter Property="Margin" Value="2,0,0,0" />
                 <Setter Property="Width" Value="16"/>
                 <Setter Property="Height" Value="16"/>
                 <Setter Property="Stretch" Value="Uniform"/>
@@ -228,6 +233,9 @@
                 <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                 <Setter Property="Background" Value="{DynamicResource WindowBackgroundBrush}" />
                 <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+                <Setter Property="MinHeight" Value="32" />
+                <Setter Property="Margin" Value="4,0,4,0" />
+                <Setter Property="Padding" Value="4" />
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="CheckBox">
@@ -281,8 +289,12 @@
             <Style x:Key="ToolbarLabelStyle" TargetType="TextBlock">
                 <Setter Property="Foreground" Value="{DynamicResource ToolbarItem.Foreground}" />
                 <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="TextAlignment" Value="Center" />
+                <Setter Property="HorizontalAlignment" Value="Left" />
                 <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                <Setter Property="MinHeight" Value="32" />
                 <Setter Property="Margin" Value="4,0,4,0" />
+                <Setter Property="Padding" Value="8" />
 
                 <Style.Triggers>
 
@@ -299,8 +311,8 @@
                 <Setter Property="Foreground" Value="{DynamicResource ToolbarItem.Foreground}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource Toolbar.Border}" />
                 <Setter Property="BorderThickness" Value="1" />
-                <Setter Property="MinHeight" Value="20" />
-                <Setter Property="Margin" Value="2,2" />
+                <Setter Property="MinHeight" Value="32" />
+                <Setter Property="Margin" Value="4,0,4,0" />
                 <Setter Property="Padding" Value="4" />
 
                 <Setter Property="Template">
@@ -347,8 +359,8 @@
                 <Setter Property="Foreground" Value="{DynamicResource ToolbarItem.Foreground}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource Toolbar.Border}" />
                 <Setter Property="BorderThickness" Value="1" />
-                <Setter Property="MinHeight" Value="20" />
-                <Setter Property="Margin" Value="2,2" />
+                <Setter Property="MinHeight" Value="32" />
+                <Setter Property="Margin" Value="4,0,4,0" />
                 <Setter Property="Padding" Value="4" />
 
                 <Setter Property="Template">
@@ -405,10 +417,10 @@
                 <Setter Property="BorderBrush" Value="{DynamicResource Toolbar.Border}" />
                 <Setter Property="TextElement.Foreground" Value="{DynamicResource ToolbarItem.Foreground}" />
                 <Setter Property="TextElement.Background" Value="{DynamicResource Toolbar.Background}" />
-
                 <Setter Property="BorderThickness" Value="1"/>
-                <Setter Property="Padding" Value="4"/>
-                <Setter Property="Margin" Value="2,2"/>
+                <Setter Property="MinHeight" Value="32" />
+                <Setter Property="Margin" Value="4,0,4,0" />
+                <Setter Property="Padding" Value="4" />
 
                 <Setter Property="Template">
                     <Setter.Value>
@@ -542,6 +554,8 @@
         
         <Setter Property="Background" Value="{DynamicResource Toolbar.Background}" />
         <Setter Property="Foreground" Value="{DynamicResource Toolbar.Border}" />
+        <Setter Property="Margin" Value="4,0,4,4" />
+        <Setter Property="Padding" Value="4" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type controls:ToolbarHostControl}">
@@ -701,7 +715,7 @@
                                         </Image.Source>
                                     </Image>
                                     <TextBlock
-                                        Margin="4,0,0,0"
+                                        Margin="4,0,4,0"
                                         Text="{Binding SemanticMetadata.Text.Label}"
                                         Visibility="{Binding DisplayIntent, Converter={StaticResource ToolbarDisplayIntentToVisibilityConverter}, ConverterParameter=Text}" />
                                 </StackPanel>
@@ -730,7 +744,6 @@
                             </StackPanel>
                         </DataTemplate>
 
-                        <!--Style="{StaticResource ToolbarComboBoxStyle}"-->
                         <DataTemplate x:Key="ToolbarComboBoxTemplate" DataType="{x:Type toolbarCore:ToolbarItem}">
                             <ComboBox
                                 Style="{StaticResource ToolbarComboBoxStyle}"

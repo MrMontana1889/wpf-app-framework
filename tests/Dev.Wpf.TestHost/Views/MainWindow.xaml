@@ -9,6 +9,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:views="clr-namespace:Dev.Wpf.Views;assembly=Dev.Wpf"
     xmlns:vm="clr-namespace:Dev.Wpf.TestHost.ViewModels"
+    xmlns:pt="clr-namespace:PropertyTools.Wpf;assembly=PropertyTools.Wpf"
     Title="Dev.Wpf TestHost"
     Width="960"
     Height="680"
@@ -106,7 +107,13 @@
                     <behaviors:EventToCommandBehavior Command="{Binding NodesDroppedCommand}" EventName="NodesDropped" />
                 </i:Interaction.Behaviors>
             </controls:TreeViewControl>
+
         </Border>
+
+        <pt:PropertyGrid
+            Grid.Column="2"
+            Background="{StaticResource Toolbar.Background}"
+            SelectedObject="{Binding SelectedObject}" />
 
     </DockPanel>
 </views:BaseWindow>
