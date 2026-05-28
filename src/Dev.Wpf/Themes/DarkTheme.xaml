@@ -106,6 +106,19 @@
     <SolidColorBrush x:Key="PanelHeaderBackgroundBrush" Color="#3A3A3A" />
     <SolidColorBrush x:Key="PanelBorderBrush" Color="#555555" />
 
+    <!--  Accounts Mode row chrome  -->
+    <SolidColorBrush x:Key="Accounts.GroupHeader.Background.Normal" Color="#3A3223" />
+    <SolidColorBrush x:Key="Accounts.GroupHeader.Background.Selected" Color="#2F4E66" />
+    <SolidColorBrush x:Key="Accounts.GroupHeader.Foreground" Color="#EDEDED" />
+    <SolidColorBrush x:Key="Accounts.GroupHeader.Border" Color="#5A4E38" />
+
+    <SolidColorBrush x:Key="Accounts.Total.Background" Color="#2C3E34" />
+    <SolidColorBrush x:Key="Accounts.Total.Foreground" Color="#FFFFFF" />
+
+    <SolidColorBrush x:Key="Accounts.Subtotal.Foreground" Color="#BBBBBB" />
+    <SolidColorBrush x:Key="Accounts.Row.Background.Selected" Color="#2F4E66" />
+    <SolidColorBrush x:Key="Accounts.Row.Foreground.Selected" Color="#FFFFFF" />
+
     <SolidColorBrush x:Key="PanelHeaderForegroundBrush" Color="#FFFFFF" />
     <SolidColorBrush x:Key="PanelForegroundBrush" Color="#E0E0E0" />
 
