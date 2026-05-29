@@ -119,6 +119,15 @@
     <SolidColorBrush x:Key="Accounts.Row.Background.Selected" Color="#2F4E66" />
     <SolidColorBrush x:Key="Accounts.Row.Foreground.Selected" Color="#FFFFFF" />
 
+    <!--  Category Manager grid chrome  -->
+    <SolidColorBrush x:Key="CategoryManager.Grid.Background" Color="#252526" />
+    <SolidColorBrush x:Key="CategoryManager.Grid.Border" Color="#3E3E42" />
+    <SolidColorBrush x:Key="CategoryManager.Grid.Text" Color="#F2F2F2" />
+    <SolidColorBrush x:Key="CategoryManager.Header.Background" Color="#303033" />
+    <SolidColorBrush x:Key="CategoryManager.Header.Text" Color="#F2F2F2" />
+    <SolidColorBrush x:Key="CategoryManager.Row.Hover" Color="#2F3945" />
+    <SolidColorBrush x:Key="CategoryManager.Row.Selected" Color="#365068" />
+
     <SolidColorBrush x:Key="PanelHeaderForegroundBrush" Color="#FFFFFF" />
     <SolidColorBrush x:Key="PanelForegroundBrush" Color="#E0E0E0" />
 
