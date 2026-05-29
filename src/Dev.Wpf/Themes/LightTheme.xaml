@@ -99,32 +99,6 @@
     <SolidColorBrush x:Key="PanelHeaderBackgroundBrush" Color="#C5D6F2" />
     <SolidColorBrush x:Key="PanelBorderBrush" Color="#7FA8D7" />
 
-    <!--  Accounts Mode row chrome  -->
-    <SolidColorBrush x:Key="Accounts.GroupHeader.Background.Normal" Color="#F2E5C4" />
-    <SolidColorBrush x:Key="Accounts.GroupHeader.Background.Selected" Color="#C9DDF0" />
-    <SolidColorBrush x:Key="Accounts.GroupHeader.Foreground" Color="#000000" />
-    <SolidColorBrush x:Key="Accounts.GroupHeader.Border" Color="#D6C7A1" />
-
-    <SolidColorBrush x:Key="Accounts.Total.Background" Color="#DCEDE4" />
-    <SolidColorBrush x:Key="Accounts.Total.Foreground" Color="#000000" />
-
-    <SolidColorBrush x:Key="Accounts.Subtotal.Foreground" Color="#444444" />
-    <SolidColorBrush x:Key="Accounts.Row.Background.Selected" Color="#C9DDF0" />
-    <SolidColorBrush x:Key="Accounts.Row.Foreground.Selected" Color="#000000" />
-
-    <!--  Category Manager grid chrome  -->
-    <SolidColorBrush x:Key="CategoryManager.Grid.Background" Color="#FFFFFF" />
-    <SolidColorBrush x:Key="CategoryManager.Grid.Border" Color="#CFCFCF" />
-    <SolidColorBrush x:Key="CategoryManager.Grid.Text" Color="#1F1F1F" />
-    <SolidColorBrush x:Key="CategoryManager.Header.Background" Color="#EEF1F5" />
-    <SolidColorBrush x:Key="CategoryManager.Header.Text" Color="#1A1A1A" />
-    <SolidColorBrush x:Key="CategoryManager.Row.Hover" Color="#E9F1FB" />
-    <SolidColorBrush x:Key="CategoryManager.Row.Selected" Color="#C9DDF0" />
-
-    <!--  Text  -->
-    <SolidColorBrush x:Key="PanelHeaderForegroundBrush" Color="#1F3A5F" />
-    <SolidColorBrush x:Key="PanelForegroundBrush" Color="#000000" />
-
     <!--
         Scoped menu-item style for ContextMenu surfaces only.
         This restores compact context-menu spacing without reintroducing
