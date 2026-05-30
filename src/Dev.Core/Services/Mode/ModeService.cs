@@ -15,6 +15,7 @@ namespace Dev.Core.Services.Mode;
 public sealed class ModeService : IModeService
 {
     private readonly IToolbarRegistryService? _toolbarRegistry;
+    private readonly List<IInteractionOverlay> _activeOverlays = new();
     private BaselineMode _activeBaselineMode = BaselineMode.Simple;
     private IFeatureMode? _activeFeatureMode;
 
@@ -35,6 +36,9 @@ public sealed class ModeService : IModeService
 
     /// <inheritdoc/>
     public IFeatureMode? ActiveFeatureMode => _activeFeatureMode;
+
+    /// <inheritdoc/>
+    public IReadOnlyList<IInteractionOverlay> ActiveOverlays => _activeOverlays;
 
     /// <inheritdoc/>
     public bool IsFeatureModeActive => _activeFeatureMode is not null;
@@ -120,5 +124,27 @@ public sealed class ModeService : IModeService
 
         _activeFeatureMode.Cancel();
         ExitFeatureMode();
+    }
+
+    /// <inheritdoc/>
+    public void ShowOverlay<TResult>(IInteractionOverlay<TResult> overlay, Action<TResult> onResult)
+    {
+        ArgumentNullException.ThrowIfNull(overlay);
+        ArgumentNullException.ThrowIfNull(onResult);
+
+        overlay.SetResultCallback(onResult);
+        _activeOverlays.Add(overlay);
+        overlay.OnEnter();
+    }
+
+    /// <inheritdoc/>
+    public void CloseOverlay(IInteractionOverlay overlay)
+    {
+        ArgumentNullException.ThrowIfNull(overlay);
+
+        if (!_activeOverlays.Remove(overlay))
+            return;
+
+        overlay.OnExit();
     }
 }

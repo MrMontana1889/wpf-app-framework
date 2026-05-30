@@ -62,6 +62,32 @@ public class ModeServiceTests
         }
     }
 
+    private sealed class StubInteractionOverlay : IInteractionOverlay<string>
+    {
+        private Action<string>? _resultCallback;
+
+        public int EnterCount { get; private set; }
+
+        public int ExitCount { get; private set; }
+
+        public bool CallbackRegistered { get; private set; }
+
+        public void OnEnter() => EnterCount++;
+
+        public void OnExit() => ExitCount++;
+
+        public void SetResultCallback(Action<string> callback)
+        {
+            CallbackRegistered = true;
+            _resultCallback = callback;
+        }
+
+        public void Complete(string result)
+        {
+            _resultCallback?.Invoke(result);
+        }
+    }
+
     [SetUp]
     public void SetUp()
     {
@@ -333,6 +359,77 @@ public class ModeServiceTests
         var mode = new StubFeatureMode("TestMode", primaryToolbarId: null);
 
         Assert.DoesNotThrow(() => _service.EnterFeatureMode(mode));
+    }
+
+    // =========================================================================
+    // Overlay support
+    // =========================================================================
+
+    [Test]
+    public void ActiveOverlays_DefaultsToEmpty()
+    {
+        Assert.That(_service.ActiveOverlays, Is.Empty);
+    }
+
+    [Test]
+    public void ShowOverlay_AddsOverlayToActiveCollection()
+    {
+        var overlay = new StubInteractionOverlay();
+
+        _service.ShowOverlay(overlay, _ => { });
+
+        Assert.That(_service.ActiveOverlays, Does.Contain(overlay));
+    }
+
+    [Test]
+    public void ShowOverlay_CallsOnEnter()
+    {
+        var overlay = new StubInteractionOverlay();
+
+        _service.ShowOverlay(overlay, _ => { });
+
+        Assert.That(overlay.EnterCount, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void ShowOverlay_RegistersResultCallback()
+    {
+        var overlay = new StubInteractionOverlay();
+
+        _service.ShowOverlay(overlay, _ => { });
+
+        Assert.That(overlay.CallbackRegistered, Is.True);
+    }
+
+    [Test]
+    public void CloseOverlay_RemovesOverlayFromActiveCollection()
+    {
+        var overlay = new StubInteractionOverlay();
+        _service.ShowOverlay(overlay, _ => { });
+
+        _service.CloseOverlay(overlay);
+
+        Assert.That(_service.ActiveOverlays, Does.Not.Contain(overlay));
+    }
+
+    [Test]
+    public void CloseOverlay_CallsOnExit()
+    {
+        var overlay = new StubInteractionOverlay();
+        _service.ShowOverlay(overlay, _ => { });
+
+        _service.CloseOverlay(overlay);
+
+        Assert.That(overlay.ExitCount, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void CloseOverlay_WhenOverlayNotActive_IsNoOp()
+    {
+        var overlay = new StubInteractionOverlay();
+
+        Assert.DoesNotThrow(() => _service.CloseOverlay(overlay));
+        Assert.That(_service.ActiveOverlays, Is.Empty);
     }
 
     // =========================================================================
