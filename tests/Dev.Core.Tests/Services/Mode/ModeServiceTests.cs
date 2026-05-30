@@ -402,6 +402,87 @@ public class ModeServiceTests
     }
 
     [Test]
+    public void TopOverlayResult_InvokesCallback()
+    {
+        var overlay = new StubInteractionOverlay();
+        var callbackCount = 0;
+
+        _service.ShowOverlay(overlay, _ => callbackCount++);
+        overlay.Complete("result");
+
+        Assert.That(callbackCount, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void TopOverlayResult_ClosesOverlayAfterCallback()
+    {
+        var overlay = new StubInteractionOverlay();
+        var callbackSawOverlayActive = false;
+
+        _service.ShowOverlay(overlay, _ =>
+        {
+            callbackSawOverlayActive = _service.ActiveOverlays.Contains(overlay);
+        });
+
+        overlay.Complete("result");
+
+        Assert.That(callbackSawOverlayActive, Is.True);
+        Assert.That(_service.ActiveOverlays, Does.Not.Contain(overlay));
+        Assert.That(overlay.ExitCount, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void NonTopOverlayResult_DoesNotInvokeCallback()
+    {
+        var firstOverlay = new StubInteractionOverlay();
+        var secondOverlay = new StubInteractionOverlay();
+        var firstCallbackCount = 0;
+
+        _service.ShowOverlay(firstOverlay, _ => firstCallbackCount++);
+        _service.ShowOverlay(secondOverlay, _ => { });
+
+        firstOverlay.Complete("ignored");
+
+        Assert.That(firstCallbackCount, Is.EqualTo(0));
+        Assert.That(_service.ActiveOverlays, Does.Contain(firstOverlay));
+        Assert.That(_service.ActiveOverlays, Does.Contain(secondOverlay));
+    }
+
+    [Test]
+    public void CloseOverlay_DoesNotInvokeResultCallback()
+    {
+        var overlay = new StubInteractionOverlay();
+        var callbackCount = 0;
+
+        _service.ShowOverlay(overlay, _ => callbackCount++);
+        _service.CloseOverlay(overlay);
+
+        Assert.That(callbackCount, Is.EqualTo(0));
+    }
+
+    [Test]
+    public void MultipleOverlays_BehaveAsLifoStackForResultFlow()
+    {
+        var firstOverlay = new StubInteractionOverlay();
+        var secondOverlay = new StubInteractionOverlay();
+        var firstCallbackCount = 0;
+        var secondCallbackCount = 0;
+
+        _service.ShowOverlay(firstOverlay, _ => firstCallbackCount++);
+        _service.ShowOverlay(secondOverlay, _ => secondCallbackCount++);
+
+        firstOverlay.Complete("ignored");
+        secondOverlay.Complete("second");
+        firstOverlay.Complete("first");
+
+        Assert.That(secondCallbackCount, Is.EqualTo(1));
+        Assert.That(firstCallbackCount, Is.EqualTo(1));
+        Assert.That(_service.ActiveOverlays, Is.Empty);
+        Assert.That(secondOverlay.ExitCount, Is.EqualTo(1));
+        Assert.That(firstOverlay.ExitCount, Is.EqualTo(1));
+    }
+
+    [Test]
     public void CloseOverlay_RemovesOverlayFromActiveCollection()
     {
         var overlay = new StubInteractionOverlay();

@@ -132,7 +132,14 @@ public sealed class ModeService : IModeService
         ArgumentNullException.ThrowIfNull(overlay);
         ArgumentNullException.ThrowIfNull(onResult);
 
-        overlay.SetResultCallback(onResult);
+        overlay.SetResultCallback(result =>
+        {
+            if (!IsTopOverlay(overlay))
+                return;
+
+            onResult(result);
+            CloseOverlay(overlay);
+        });
         _activeOverlays.Add(overlay);
         overlay.OnEnter();
     }
@@ -146,5 +153,13 @@ public sealed class ModeService : IModeService
             return;
 
         overlay.OnExit();
+    }
+
+    private bool IsTopOverlay(IInteractionOverlay overlay)
+    {
+        if (_activeOverlays.Count == 0)
+            return false;
+
+        return ReferenceEquals(_activeOverlays[^1], overlay);
     }
 }
