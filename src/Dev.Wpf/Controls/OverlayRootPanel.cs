@@ -5,6 +5,7 @@ using Dev.Core.Services.Mode;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace Dev.Wpf.Controls;
 
@@ -13,6 +14,11 @@ namespace Dev.Wpf.Controls;
 /// </summary>
 public class OverlayRootPanel : ContentControl
 {
+    public OverlayRootPanel()
+    {
+        IsVisibleChanged += OnPanelIsVisibleChanged;
+    }
+
     static OverlayRootPanel()
     {
         DefaultStyleKeyProperty.OverrideMetadata(
@@ -20,7 +26,7 @@ public class OverlayRootPanel : ContentControl
             new FrameworkPropertyMetadata(typeof(OverlayRootPanel)));
     }
 
-    protected override void OnKeyDown(KeyEventArgs e)
+    protected override void OnPreviewKeyDown(KeyEventArgs e)
     {
         if (e.Key == Key.Escape && DataContext is IInteractionOverlay overlay)
         {
@@ -28,16 +34,41 @@ public class OverlayRootPanel : ContentControl
             {
                 overlay.CancelCommand.Execute(null);
                 e.Handled = true;
+                return;
             }
         }
 
-        base.OnKeyDown(e);
+        base.OnPreviewKeyDown(e);
     }
 
-    protected override void OnInitialized(EventArgs e)
+    private void OnPanelIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
-        base.OnInitialized(e);
+        if (IsVisible)
+        {
+            Dispatcher.BeginInvoke(() =>
+            {
+                Dispatcher.BeginInvoke(() =>
+                {
+                    if (!MoveFocus(new TraversalRequest(FocusNavigationDirection.First)))
+                    {
+                        Focus();
+                        Keyboard.Focus(this);
+                    }
+                }, DispatcherPriority.Input);
+            }, DispatcherPriority.Loaded);
+        }
+    }
 
-        Loaded += (_, _) => Focus();
+    protected override void OnGotKeyboardFocus(KeyboardFocusChangedEventArgs e)
+    {
+        base.OnGotKeyboardFocus(e);
+
+        if (e.NewFocus == this)
+        {
+            Dispatcher.BeginInvoke(() =>
+            {
+                MoveFocus(new TraversalRequest(FocusNavigationDirection.First));
+            }, DispatcherPriority.Input);
+        }
     }
 }

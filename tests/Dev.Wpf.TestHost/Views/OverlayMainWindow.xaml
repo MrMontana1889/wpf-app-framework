@@ -45,6 +45,7 @@
                                 Content="Cancel" />
                             <controls:WinFormsButton
                                 MinWidth="100"
+                                IsDefault="True"
                                 Command="{Binding ConfirmCommand}"
                                 Content="Confirm" />
                         </StackPanel>

@@ -2,6 +2,7 @@
 // Copyright (c) 2026 MrMontana1889.  See LICENSE
 
 using Dev.Core.Services.Mode;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -17,6 +18,8 @@ public sealed class OverlayHostControl : Control
 {
     private bool _isRenderingSubscribed;
     private IInteractionOverlay? _lastProjectedOverlay;
+    private bool _isBackgroundIsolationApplied;
+    private readonly List<UIElement> _disabledSiblingElements = new();
 
     static OverlayHostControl()
     {
@@ -98,6 +101,7 @@ public sealed class OverlayHostControl : Control
 
         CompositionTarget.Rendering -= OnRendering;
         _isRenderingSubscribed = false;
+        RestoreBackgroundInteractivity();
     }
 
     private void OnRendering(object? sender, EventArgs e)
@@ -122,9 +126,51 @@ public sealed class OverlayHostControl : Control
         if (HasActiveOverlay != hasActiveOverlay)
             SetValue(HasActiveOverlayPropertyKey, hasActiveOverlay);
 
+        if (hasActiveOverlay)
+            ApplyBackgroundIsolation();
+        else
+            RestoreBackgroundInteractivity();
+
         if (overlayChanged && topOverlay is not null)
             Keyboard.Focus(this);
 
         _lastProjectedOverlay = topOverlay;
+    }
+
+    private void ApplyBackgroundIsolation()
+    {
+        if (_isBackgroundIsolationApplied)
+            return;
+
+        if (Parent is not Panel panel)
+            return;
+
+        _disabledSiblingElements.Clear();
+
+        foreach (UIElement child in panel.Children)
+        {
+            if (ReferenceEquals(child, this))
+                continue;
+
+            if (!child.IsEnabled)
+                continue;
+
+            child.IsEnabled = false;
+            _disabledSiblingElements.Add(child);
+        }
+
+        _isBackgroundIsolationApplied = true;
+    }
+
+    private void RestoreBackgroundInteractivity()
+    {
+        if (!_isBackgroundIsolationApplied && _disabledSiblingElements.Count == 0)
+            return;
+
+        foreach (var element in _disabledSiblingElements)
+            element.IsEnabled = true;
+
+        _disabledSiblingElements.Clear();
+        _isBackgroundIsolationApplied = false;
     }
 }
