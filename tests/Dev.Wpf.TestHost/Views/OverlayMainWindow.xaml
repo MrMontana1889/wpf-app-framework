@@ -45,9 +45,103 @@
                                 Content="Cancel" />
                             <controls:WinFormsButton
                                 MinWidth="100"
-                                IsDefault="True"
                                 Command="{Binding ConfirmCommand}"
-                                Content="Confirm" />
+                                Content="Confirm"
+                                IsDefault="True" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </controls:OverlayRootPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="Step1Template">
+            <StackPanel Margin="12">
+                <TextBlock FontWeight="Bold" Text="Step 1: Basic Info" />
+                <TextBox Margin="0,8,0,0" Text="{Binding Data.Name}" />
+                <TextBox Margin="0,8,0,0" Text="{Binding Data.Email}" />
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="Step2Template">
+            <StackPanel Margin="12">
+                <TextBlock FontWeight="Bold" Text="Step 2: Options" />
+                <CheckBox
+                    Margin="0,8,0,0"
+                    Content="Enable Feature A"
+                    IsChecked="{Binding Data.EnableFeatureA}" />
+                <CheckBox
+                    Margin="0,8,0,0"
+                    Content="Enable Feature B"
+                    IsChecked="{Binding Data.EnableFeatureB}" />
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="Step3Template">
+            <StackPanel Margin="12">
+                <TextBlock FontWeight="Bold" Text="Step 3: Summary" />
+                <TextBlock Margin="0,8,0,0" Text="{Binding Data.Name}" />
+                <TextBlock Margin="0,4,0,0" Text="{Binding Data.Email}" />
+                <TextBox
+                    Height="100"
+                    Margin="0,8,0,0"
+                    AcceptsReturn="True"
+                    Text="{Binding Data.Notes}" />
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type overlays:NewAccountWizardOverlay}">
+            <controls:OverlayRootPanel>
+                <Border
+                    Width="500"
+                    MinHeight="400"
+                    MaxHeight="640"
+                    Padding="0"
+                    Background="{DynamicResource Toolbar.Background}"
+                    BorderBrush="{DynamicResource Toolbar.Border}"
+                    BorderThickness="1">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <ContentControl Grid.Row="0" Content="{Binding}">
+                            <ContentControl.Style>
+                                <Style TargetType="ContentControl">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding StepIndex}" Value="0">
+                                            <Setter Property="ContentTemplate" Value="{StaticResource Step1Template}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding StepIndex}" Value="1">
+                                            <Setter Property="ContentTemplate" Value="{StaticResource Step2Template}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding StepIndex}" Value="2">
+                                            <Setter Property="ContentTemplate" Value="{StaticResource Step3Template}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ContentControl.Style>
+                        </ContentControl>
+
+                        <StackPanel
+                            Grid.Row="1"
+                            Margin="12"
+                            HorizontalAlignment="Right"
+                            Orientation="Horizontal">
+                            <controls:WinFormsButton
+                                Margin="0,0,8,0"
+                                Command="{Binding BackCommand}"
+                                Content="Back" />
+                            <controls:WinFormsButton
+                                Margin="0,0,8,0"
+                                Command="{Binding NextCommand}"
+                                Content="Next" />
+                            <controls:WinFormsButton
+                                Margin="0,0,8,0"
+                                Command="{Binding FinishCommand}"
+                                Content="Finish"
+                                IsDefault="True" />
+                            <controls:WinFormsButton Command="{Binding CancelCommand}" Content="Cancel" />
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -66,7 +160,7 @@
                     FontSize="16"
                     FontWeight="SemiBold"
                     Text="Overlay Validation Harness" />
-                <TextBlock Margin="0,8,0,16" Text="Use the button below to trigger a test confirm overlay through ModeService." />
+                <TextBlock Margin="0,8,0,16" Text="Use the buttons below to trigger overlay test flows through ModeService." />
 
                 <StackPanel Orientation="Horizontal">
                     <controls:WinFormsButton
@@ -74,6 +168,11 @@
                         Margin="0,0,12,0"
                         Command="{Binding ShowConfirmOverlayCommand}"
                         Content="Show Confirm Overlay" />
+                    <controls:WinFormsButton
+                        MinWidth="180"
+                        Margin="0,0,12,0"
+                        Command="{Binding ShowWizardOverlayCommand}"
+                        Content="Show Wizard Overlay" />
                     <TextBox Width="280" Text="Background input should be blocked while overlay is active." />
                 </StackPanel>
 

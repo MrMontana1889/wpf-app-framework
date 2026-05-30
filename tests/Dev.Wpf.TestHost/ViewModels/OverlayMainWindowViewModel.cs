@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Dev.Core.Services.Mode;
 using Dev.Wpf.TestHost.Overlays;
+using System.Text.Json;
 
 namespace Dev.Wpf.TestHost.ViewModels;
 
@@ -38,6 +39,17 @@ public sealed partial class OverlayMainWindowViewModel : ObservableObject
             LastOverlayResult = confirmed
                 ? $"Action #{_confirmCounter} confirmed."
                 : $"Action #{_confirmCounter} canceled.";
+        });
+    }
+
+    [RelayCommand]
+    private void ShowWizardOverlay()
+    {
+        var overlay = new NewAccountWizardOverlay();
+
+        _modeService.ShowOverlay(overlay, result =>
+        {
+            LastOverlayResult = $"Wizard completed: {JsonSerializer.Serialize(result)}";
         });
     }
 }
