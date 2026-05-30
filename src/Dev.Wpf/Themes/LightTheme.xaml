@@ -99,6 +99,9 @@
     <SolidColorBrush x:Key="PanelHeaderBackgroundBrush" Color="#C5D6F2" />
     <SolidColorBrush x:Key="PanelBorderBrush" Color="#7FA8D7" />
 
+    <!--  Overlay host dimming layer (light theme): dark translucent wash  -->
+    <SolidColorBrush x:Key="OverlayBackgroundBrush" Color="#66000000" />
+
     <!--
         Scoped menu-item style for ContextMenu surfaces only.
         This restores compact context-menu spacing without reintroducing

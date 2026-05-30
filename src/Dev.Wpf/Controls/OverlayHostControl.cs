@@ -4,6 +4,7 @@
 using Dev.Core.Services.Mode;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace Dev.Wpf.Controls;
@@ -15,6 +16,7 @@ namespace Dev.Wpf.Controls;
 public sealed class OverlayHostControl : Control
 {
     private bool _isRenderingSubscribed;
+    private IInteractionOverlay? _lastProjectedOverlay;
 
     static OverlayHostControl()
     {
@@ -25,6 +27,7 @@ public sealed class OverlayHostControl : Control
 
     public OverlayHostControl()
     {
+        Focusable = true;
         Loaded += (_, _) => AttachProjectionLoop();
         Unloaded += (_, _) => DetachProjectionLoop();
     }
@@ -96,7 +99,14 @@ public sealed class OverlayHostControl : Control
         if (overlays is { Count: > 0 })
             topOverlay = overlays[^1];
 
+        var overlayChanged = !ReferenceEquals(_lastProjectedOverlay, topOverlay);
+
         if (!ReferenceEquals(ActiveOverlay, topOverlay))
             SetValue(ActiveOverlayPropertyKey, topOverlay);
+
+        if (overlayChanged && topOverlay is not null)
+            Keyboard.Focus(this);
+
+        _lastProjectedOverlay = topOverlay;
     }
 }

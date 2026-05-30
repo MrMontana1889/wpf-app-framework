@@ -71,17 +71,38 @@
 
     <!--
         ═══════════════════════════════════════════════════════════════════
-        OverlayHostControl — Phase O1 baseline projection
+        OverlayHostControl — Phase O2 visual modality layer
         ═══════════════════════════════════════════════════════════════════
-        Projects the top overlay from IModeService.ActiveOverlays as content.
-        Rendering is delegated to standard WPF DataTemplate resolution.
+        Projects the top overlay from IModeService.ActiveOverlays, adds a
+        full-surface interaction-blocking background layer, and renders
+        overlay content via standard WPF DataTemplate resolution.
     -->
     <Style TargetType="{x:Type controls:OverlayHostControl}">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type controls:OverlayHostControl}">
-                    <ContentPresenter
-                        Content="{Binding ActiveOverlay, RelativeSource={RelativeSource TemplatedParent}}" />
+                    <Grid Background="Transparent">
+                        <Border
+                            x:Name="PART_BlockingLayer"
+                            Background="{DynamicResource OverlayBackgroundBrush}"
+                            IsHitTestVisible="True"
+                            Visibility="Visible" />
+
+                        <ContentPresenter
+                            x:Name="PART_OverlayPresenter"
+                            Content="{Binding ActiveOverlay, RelativeSource={RelativeSource TemplatedParent}}"
+                            IsHitTestVisible="True"
+                            Visibility="Visible" />
+                    </Grid>
+
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="ActiveOverlay" Value="{x:Null}">
+                            <Setter TargetName="PART_BlockingLayer" Property="Visibility" Value="Collapsed" />
+                            <Setter TargetName="PART_BlockingLayer" Property="IsHitTestVisible" Value="False" />
+                            <Setter TargetName="PART_OverlayPresenter" Property="Visibility" Value="Collapsed" />
+                            <Setter TargetName="PART_OverlayPresenter" Property="IsHitTestVisible" Value="False" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
