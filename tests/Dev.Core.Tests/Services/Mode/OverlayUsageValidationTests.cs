@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using Dev.Core.Services.Mode;
 using NUnit.Framework;
+using System.Windows.Input;
 
 namespace Dev.Core.Tests.Services.Mode;
 
@@ -20,11 +21,28 @@ public class OverlayUsageValidationTests
     {
         private Action<string>? resultCallback;
 
+        private sealed class StubCommand : ICommand
+        {
+            public event EventHandler? CanExecuteChanged
+            {
+                add { }
+                remove { }
+            }
+
+            public bool CanExecute(object? parameter) => true;
+
+            public void Execute(object? parameter)
+            {
+            }
+        }
+
         public int EnterCount { get; private set; }
 
         public int ExitCount { get; private set; }
 
         public int ResolveCount { get; private set; }
+
+        public ICommand CancelCommand { get; } = new StubCommand();
 
         public void OnEnter()
         {

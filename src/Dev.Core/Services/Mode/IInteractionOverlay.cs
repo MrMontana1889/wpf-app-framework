@@ -4,6 +4,8 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
+using System.Windows.Input;
+
 namespace Dev.Core.Services.Mode;
 
 /// <summary>
@@ -14,6 +16,11 @@ namespace Dev.Core.Services.Mode;
 /// </remarks>
 public interface IInteractionOverlay
 {
+    /// <summary>
+    /// Gets the command that cancels the active overlay interaction.
+    /// </summary>
+    ICommand CancelCommand { get; }
+
     /// <summary>
     /// Invoked when the overlay becomes active.
     /// </summary>

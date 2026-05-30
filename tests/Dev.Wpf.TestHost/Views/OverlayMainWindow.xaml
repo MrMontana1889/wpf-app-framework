@@ -1,0 +1,89 @@
+<views:BaseWindow
+    x:Class="Dev.Wpf.TestHost.Views.OverlayMainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Dev.Wpf.Controls;assembly=Dev.Wpf"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:overlays="clr-namespace:Dev.Wpf.TestHost.Overlays"
+    xmlns:views="clr-namespace:Dev.Wpf.Views;assembly=Dev.Wpf"
+    Title="Overlay Validation Host"
+    Width="960"
+    Height="680"
+    WindowStartupLocation="CenterScreen"
+    mc:Ignorable="d">
+
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type overlays:ConfirmOverlay}">
+            <controls:OverlayRootPanel>
+                <Border
+                    MinWidth="320"
+                    Padding="16"
+                    Background="{DynamicResource Toolbar.Background}"
+                    BorderBrush="{DynamicResource Toolbar.Border}"
+                    BorderThickness="1">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="16" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock
+                            Grid.Row="0"
+                            Text="{Binding Message}"
+                            TextWrapping="Wrap" />
+
+                        <StackPanel
+                            Grid.Row="2"
+                            HorizontalAlignment="Right"
+                            Orientation="Horizontal">
+                            <controls:WinFormsButton
+                                MinWidth="100"
+                                Margin="0,0,8,0"
+                                Command="{Binding CancelCommand}"
+                                Content="Cancel" />
+                            <controls:WinFormsButton
+                                MinWidth="100"
+                                Command="{Binding ConfirmCommand}"
+                                Content="Confirm" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </controls:OverlayRootPanel>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid>
+        <Border
+            Margin="16"
+            Padding="16"
+            BorderBrush="{DynamicResource Toolbar.Border}"
+            BorderThickness="1">
+            <StackPanel>
+                <TextBlock
+                    FontSize="16"
+                    FontWeight="SemiBold"
+                    Text="Overlay Validation Harness" />
+                <TextBlock Margin="0,8,0,16" Text="Use the button below to trigger a test confirm overlay through ModeService." />
+
+                <StackPanel Orientation="Horizontal">
+                    <controls:WinFormsButton
+                        MinWidth="180"
+                        Margin="0,0,12,0"
+                        Command="{Binding ShowConfirmOverlayCommand}"
+                        Content="Show Confirm Overlay" />
+                    <TextBox Width="280" Text="Background input should be blocked while overlay is active." />
+                </StackPanel>
+
+                <TextBlock
+                    Margin="0,16,0,0"
+                    FontWeight="SemiBold"
+                    Text="Last Result:" />
+                <TextBlock Text="{Binding LastOverlayResult}" />
+            </StackPanel>
+        </Border>
+
+        <controls:OverlayHostControl Panel.ZIndex="100" ModeService="{Binding ModeService}" />
+    </Grid>
+</views:BaseWindow>

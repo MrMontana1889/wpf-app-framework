@@ -48,6 +48,15 @@ public sealed class OverlayHostControl : Control
 
     public static readonly DependencyProperty ActiveOverlayProperty = ActiveOverlayPropertyKey.DependencyProperty;
 
+    private static readonly DependencyPropertyKey HasActiveOverlayPropertyKey =
+        DependencyProperty.RegisterReadOnly(
+            nameof(HasActiveOverlay),
+            typeof(bool),
+            typeof(OverlayHostControl),
+            new FrameworkPropertyMetadata(false));
+
+    public static readonly DependencyProperty HasActiveOverlayProperty = HasActiveOverlayPropertyKey.DependencyProperty;
+
     /// <summary>
     /// The mode service that owns active overlays.
     /// </summary>
@@ -61,6 +70,11 @@ public sealed class OverlayHostControl : Control
     /// The topmost active overlay, or <c>null</c> when no overlays are active.
     /// </summary>
     public IInteractionOverlay? ActiveOverlay => (IInteractionOverlay?)GetValue(ActiveOverlayProperty);
+
+    /// <summary>
+    /// Gets a value indicating whether an overlay is currently active.
+    /// </summary>
+    public bool HasActiveOverlay => (bool)GetValue(HasActiveOverlayProperty);
 
     private static void OnModeServiceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
@@ -103,6 +117,10 @@ public sealed class OverlayHostControl : Control
 
         if (!ReferenceEquals(ActiveOverlay, topOverlay))
             SetValue(ActiveOverlayPropertyKey, topOverlay);
+
+        var hasActiveOverlay = topOverlay is not null;
+        if (HasActiveOverlay != hasActiveOverlay)
+            SetValue(HasActiveOverlayPropertyKey, hasActiveOverlay);
 
         if (overlayChanged && topOverlay is not null)
             Keyboard.Focus(this);

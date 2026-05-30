@@ -79,6 +79,7 @@
         responsive centering and scroll fallback.
     -->
     <Style TargetType="{x:Type controls:OverlayHostControl}">
+        <Setter Property="IsHitTestVisible" Value="False" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type controls:OverlayHostControl}">
@@ -86,8 +87,8 @@
                         <Border
                             x:Name="PART_BlockingLayer"
                             Background="{DynamicResource OverlayBackgroundBrush}"
-                            IsHitTestVisible="True"
-                            Visibility="Visible" />
+                            IsHitTestVisible="False"
+                            Visibility="Collapsed" />
 
                         <ScrollViewer
                             x:Name="PART_OverlayScrollViewer"
@@ -109,7 +110,14 @@
                     </Grid>
 
                     <ControlTemplate.Triggers>
+                        <Trigger Property="HasActiveOverlay" Value="True">
+                            <Setter Property="IsHitTestVisible" Value="True" />
+                            <Setter TargetName="PART_BlockingLayer" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="PART_BlockingLayer" Property="IsHitTestVisible" Value="True" />
+                        </Trigger>
+
                         <Trigger Property="ActiveOverlay" Value="{x:Null}">
+                            <Setter Property="IsHitTestVisible" Value="False" />
                             <Setter TargetName="PART_BlockingLayer" Property="Visibility" Value="Collapsed" />
                             <Setter TargetName="PART_BlockingLayer" Property="IsHitTestVisible" Value="False" />
                             <Setter TargetName="PART_OverlayScrollViewer" Property="Visibility" Value="Collapsed" />
@@ -118,6 +126,19 @@
                             <Setter TargetName="PART_OverlayPresenter" Property="IsHitTestVisible" Value="False" />
                         </Trigger>
                     </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="{x:Type controls:OverlayRootPanel}">
+        <Setter Property="Focusable" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type controls:OverlayRootPanel}">
+                    <Grid>
+                        <ContentPresenter />
+                    </Grid>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

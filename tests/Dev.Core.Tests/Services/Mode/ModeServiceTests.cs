@@ -5,6 +5,7 @@ using Dev.Core.Services;
 using Dev.Core.Services.Mode;
 using Dev.Core.Toolbar;
 using NUnit.Framework;
+using System.Windows.Input;
 
 namespace Dev.Core.Tests.Services.Mode;
 
@@ -66,11 +67,28 @@ public class ModeServiceTests
     {
         private Action<string>? _resultCallback;
 
+        private sealed class StubCommand : ICommand
+        {
+            public event EventHandler? CanExecuteChanged
+            {
+                add { }
+                remove { }
+            }
+
+            public bool CanExecute(object? parameter) => true;
+
+            public void Execute(object? parameter)
+            {
+            }
+        }
+
         public int EnterCount { get; private set; }
 
         public int ExitCount { get; private set; }
 
         public bool CallbackRegistered { get; private set; }
+
+        public ICommand CancelCommand { get; } = new StubCommand();
 
         public void OnEnter() => EnterCount++;
 
