@@ -1,4 +1,4 @@
-// PromptDialogViewModel.cs
+// PromptViewModel.cs
 // Copyright (c) 2026 MrMontana1889.  See LICENSE
 
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -8,11 +8,12 @@ using System.Globalization;
 
 namespace Dev.Core.ViewModels;
 
-public partial class PromptDialogViewModel : ObservableObject
+public partial class PromptViewModel : ObservableObject
 {
     private BoundPromptRequest? _request;
+    private Action? _requestClose;
 
-    public PromptDialogViewModel()
+    public PromptViewModel()
     {
         _request = null;
     }
@@ -54,10 +55,11 @@ public partial class PromptDialogViewModel : ObservableObject
 
     // ── Initialization ───────────────────────────────────────────────────────
 
-    public void Initialize(BoundPromptRequest request)
+    public void Initialize(BoundPromptRequest request, Action? requestClose = null)
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        _requestClose = requestClose;
         _request = request;
 
         // Apply title and message templates
@@ -148,6 +150,7 @@ public partial class PromptDialogViewModel : ObservableObject
     {
         SelectedResult = result;
         DialogResult = true;
+        _requestClose?.Invoke();
     }
 
     /// <summary>

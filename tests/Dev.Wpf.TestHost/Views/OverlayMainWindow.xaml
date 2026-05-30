@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:Dev.Wpf.Controls;assembly=Dev.Wpf"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:coreVm="clr-namespace:Dev.Core.ViewModels;assembly=Dev.Core"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:overlays="clr-namespace:Dev.Wpf.TestHost.Overlays"
     xmlns:views="clr-namespace:Dev.Wpf.Views;assembly=Dev.Wpf"
@@ -14,6 +15,12 @@
     mc:Ignorable="d">
 
     <Window.Resources>
+        <DataTemplate DataType="{x:Type coreVm:PromptViewModel}">
+            <controls:OverlayRootPanel>
+                <views:PromptView />
+            </controls:OverlayRootPanel>
+        </DataTemplate>
+
         <DataTemplate DataType="{x:Type overlays:ConfirmOverlay}">
             <controls:OverlayRootPanel>
                 <Border
@@ -173,6 +180,16 @@
                         Margin="0,0,12,0"
                         Command="{Binding ShowWizardOverlayCommand}"
                         Content="Show Wizard Overlay" />
+                    <controls:WinFormsButton
+                        MinWidth="180"
+                        Margin="0,0,12,0"
+                        Command="{Binding ShowPromptDialogCommand}"
+                        Content="Show Prompt Dialog" />
+                    <controls:WinFormsButton
+                        MinWidth="180"
+                        Margin="0,0,12,0"
+                        Command="{Binding ShowPromptOverlayCommand}"
+                        Content="Show Prompt Overlay" />
                     <TextBox Width="280" Text="Background input should be blocked while overlay is active." />
                 </StackPanel>
 
