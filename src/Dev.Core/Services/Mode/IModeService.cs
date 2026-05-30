@@ -1,6 +1,9 @@
 // IModeService.cs
 // Copyright (c) 2026 MrMontana1889.  See LICENSE
 
+using System;
+using System.Collections.Generic;
+
 namespace Dev.Core.Services.Mode;
 
 /// <summary>
@@ -36,6 +39,11 @@ public interface IModeService
     /// The currently active feature mode, or <c>null</c> when no feature mode is active.
     /// </summary>
     IFeatureMode? ActiveFeatureMode { get; }
+
+    /// <summary>
+    /// The currently active overlays, in the order they were shown.
+    /// </summary>
+    IReadOnlyList<IInteractionOverlay> ActiveOverlays { get; }
 
     /// <summary>
     /// <c>true</c> while exactly one feature mode is active.
@@ -110,4 +118,20 @@ public interface IModeService
     /// No-op when no feature mode is active.
     /// </remarks>
     void CancelAndExitFeatureMode();
+
+    /// <summary>
+    /// Shows the supplied overlay, stores it as active, registers the result callback,
+    /// and invokes <see cref="IInteractionOverlay.OnEnter"/>.
+    /// </summary>
+    /// <typeparam name="TResult">The overlay result type.</typeparam>
+    /// <param name="overlay">The overlay to show.</param>
+    /// <param name="onResult">The callback to register with the overlay.</param>
+    void ShowOverlay<TResult>(IInteractionOverlay<TResult> overlay, Action<TResult> onResult);
+
+    /// <summary>
+    /// Closes the supplied overlay, removes it from the active collection, and invokes
+    /// <see cref="IInteractionOverlay.OnExit"/>.
+    /// </summary>
+    /// <param name="overlay">The overlay to close.</param>
+    void CloseOverlay(IInteractionOverlay overlay);
 }

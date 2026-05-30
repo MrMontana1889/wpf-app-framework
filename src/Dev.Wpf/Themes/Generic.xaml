@@ -71,6 +71,85 @@
 
     <!--
         ═══════════════════════════════════════════════════════════════════
+        OverlayHostControl — Phase O3 responsive layout
+        ═══════════════════════════════════════════════════════════════════
+        Projects the top overlay from IModeService.ActiveOverlays, adds a
+        full-surface interaction-blocking background layer, and renders
+        overlay content via standard WPF DataTemplate resolution with
+        responsive centering and scroll fallback.
+    -->
+    <Style TargetType="{x:Type controls:OverlayHostControl}">
+        <Setter Property="IsHitTestVisible" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type controls:OverlayHostControl}">
+                    <Grid x:Name="PART_Root" Background="Transparent">
+                        <Border
+                            x:Name="PART_BlockingLayer"
+                            Background="{DynamicResource OverlayBackgroundBrush}"
+                            IsHitTestVisible="False"
+                            Visibility="Collapsed" />
+
+                        <ScrollViewer
+                            x:Name="PART_OverlayScrollViewer"
+                            Margin="24"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            HorizontalScrollBarVisibility="Auto"
+                            VerticalScrollBarVisibility="Auto"
+                            MaxWidth="{Binding ActualWidth, ElementName=PART_Root}"
+                            MaxHeight="{Binding ActualHeight, ElementName=PART_Root}"
+                            IsHitTestVisible="True"
+                            Visibility="Visible"
+                            CanContentScroll="True"
+                            Focusable="False">
+                            <ContentPresenter
+                                x:Name="PART_OverlayPresenter"
+                                Content="{Binding ActiveOverlay, RelativeSource={RelativeSource TemplatedParent}}" />
+                        </ScrollViewer>
+                    </Grid>
+
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="HasActiveOverlay" Value="True">
+                            <Setter Property="IsHitTestVisible" Value="True" />
+                            <Setter TargetName="PART_BlockingLayer" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="PART_BlockingLayer" Property="IsHitTestVisible" Value="True" />
+                        </Trigger>
+
+                        <Trigger Property="ActiveOverlay" Value="{x:Null}">
+                            <Setter Property="IsHitTestVisible" Value="False" />
+                            <Setter TargetName="PART_BlockingLayer" Property="Visibility" Value="Collapsed" />
+                            <Setter TargetName="PART_BlockingLayer" Property="IsHitTestVisible" Value="False" />
+                            <Setter TargetName="PART_OverlayScrollViewer" Property="Visibility" Value="Collapsed" />
+                            <Setter TargetName="PART_OverlayScrollViewer" Property="IsHitTestVisible" Value="False" />
+                            <Setter TargetName="PART_OverlayPresenter" Property="Visibility" Value="Collapsed" />
+                            <Setter TargetName="PART_OverlayPresenter" Property="IsHitTestVisible" Value="False" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="{x:Type controls:OverlayRootPanel}">
+        <Setter Property="Focusable" Value="True" />
+        <Setter Property="FocusManager.IsFocusScope" Value="True" />
+        <Setter Property="KeyboardNavigation.TabNavigation" Value="Cycle" />
+        <Setter Property="KeyboardNavigation.ControlTabNavigation" Value="Cycle" />
+        <Setter Property="KeyboardNavigation.DirectionalNavigation" Value="Cycle" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type controls:OverlayRootPanel}">
+                    <Grid>
+                        <ContentPresenter />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+        ═══════════════════════════════════════════════════════════════════
         MenuHostControl — Phase M2 (Core MenuItem projection)
         ═══════════════════════════════════════════════════════════════════
         Projects Dev.Core semantic menu items into a native WPF Menu surface.

@@ -4,8 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="clr-namespace:Dev.Wpf.Views"
-        xmlns:behaviors="clr-namespace:Dev.Wpf.Behaviors"
-        xmlns:converters="clr-namespace:Dev.Wpf.Converters"
+        xmlns:local="clr-namespace:Dev.Wpf.Views"
         xmlns:vm="clr-namespace:Dev.Core.ViewModels;assembly=Dev.Core"
         mc:Ignorable="d"
         Title="{Binding TitleText}"
@@ -13,69 +12,8 @@
         SizeToContent="Height"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
-        d:DataContext="{d:DesignInstance vm:PromptDialogViewModel}">
+        d:DataContext="{d:DesignInstance vm:PromptViewModel}">
 
-    <Window.Resources>
-        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
-    </Window.Resources>
-
-    <StackPanel Margin="24,20,24,20">
-
-        <!-- Title -->
-        <TextBlock Text="{Binding TitleText}"
-                   FontSize="16"
-                   FontWeight="SemiBold"
-                   TextWrapping="Wrap" />
-
-        <!-- Message -->
-        <TextBlock Text="{Binding MessageText}"
-                   Opacity="0.9"
-                   TextWrapping="Wrap"
-                   Margin="0,12,0,0" />
-
-        <!-- Separator -->
-        <Separator Margin="0,8,0,8" />
-
-        <!-- Suppression Checkbox -->
-        <CheckBox Content="{Binding SuppressCheckboxText}"
-                  Visibility="{Binding ShowSuppressCheckbox, Converter={StaticResource BoolToVisibilityConverter}}"
-                  IsChecked="{Binding SuppressCheckboxChecked}"
-                  Margin="0,12,0,0" />
-
-        <!-- Button Panel -->
-        <StackPanel Orientation="Horizontal"
-                    HorizontalAlignment="Right"
-                    Margin="0,12,0,0">
-
-            <Button Content="Yes"
-                Visibility="{Binding ShowYesButton, Converter={StaticResource BoolToVisibilityConverter}}"
-                MinWidth="80"
-                Margin="8,0,0,0"
-                Command="{Binding YesCommand}"
-                IsDefault="True" />
-
-            <Button Content="No"
-                Visibility="{Binding ShowNoButton, Converter={StaticResource BoolToVisibilityConverter}}"
-                MinWidth="80"
-                Margin="8,0,0,0"
-                Command="{Binding NoCommand}" />
-
-            <Button Content="OK"
-                Visibility="{Binding ShowOkButton, Converter={StaticResource BoolToVisibilityConverter}}"
-                MinWidth="80"
-                Margin="8,0,0,0"
-                Command="{Binding OkCommand}"
-                IsDefault="True" />
-
-            <Button Content="Cancel"
-                Visibility="{Binding ShowCancelButton, Converter={StaticResource BoolToVisibilityConverter}}"
-                MinWidth="80"
-                Margin="8,0,0,0"
-                Command="{Binding CancelCommand}"
-                IsCancel="True" />
-            
-        </StackPanel>
-
-    </StackPanel>
+    <local:PromptView />
 
 </views:BaseDialog>

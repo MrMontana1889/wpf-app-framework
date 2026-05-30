@@ -17,9 +17,9 @@ namespace Dev.Wpf.Views;
 [ExcludeFromCodeCoverage]
 public partial class PromptDialog : BaseDialog, IPromptPresenter
 {
-    private readonly PromptDialogViewModel _viewModel;
+    private readonly PromptViewModel _viewModel;
 
-    public PromptDialog(PromptDialogViewModel viewModel, IWindowPersistenceService windowPersistence)
+    public PromptDialog(PromptViewModel viewModel, IWindowPersistenceService windowPersistence)
         : base(windowPersistence)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
@@ -36,7 +36,7 @@ public partial class PromptDialog : BaseDialog, IPromptPresenter
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        _viewModel.Initialize(request);
+        _viewModel.Initialize(request, () => Close());
         _viewModel.PropertyChanged += OnViewModelDialogCompleted;
 
         var owner = GetDialogOwner();
@@ -58,7 +58,7 @@ public partial class PromptDialog : BaseDialog, IPromptPresenter
 
     private void OnViewModelDialogCompleted(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(PromptDialogViewModel.DialogResult) && _viewModel.DialogResult.HasValue)
+        if (e.PropertyName == nameof(PromptViewModel.DialogResult) && _viewModel.DialogResult.HasValue)
             DialogResult = _viewModel.DialogResult.Value;
     }
 

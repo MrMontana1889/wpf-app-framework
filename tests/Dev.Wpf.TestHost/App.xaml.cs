@@ -21,10 +21,24 @@ public partial class App : Application
 
         IWindowPersistenceService persistence = new WindowPersistenceService(Path.GetTempPath());
 
+        bool useOverlayTestHost = true;
+
+        if (useOverlayTestHost)
+        {
+            var overlayViewModel = new OverlayMainWindowViewModel();
+            var overlayWindow = new OverlayMainWindow(persistence)
+            {
+                DataContext = overlayViewModel
+            };
+
+            overlayWindow.Show();
+            return;
+        }
+
         MainWindowViewModel viewModel = new MainWindowViewModel(themeService);
-        var mainWindow = new MainWindow(persistence) 
-        { 
-            DataContext = viewModel 
+        var mainWindow = new MainWindow(persistence)
+        {
+            DataContext = viewModel
         };
 
         mainWindow.Show();
