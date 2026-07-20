@@ -142,11 +142,16 @@ public sealed class ListViewContextMenuBehavior : Behavior<ListView>
         if (item.Command is null)
             return null;
 
+        var commandParameter =
+            item.CommandParameterProvider?.Invoke()
+            ?? item.CommandParameter;
+
         var wpfItem = new WpfMenuItem
         {
-            Header      = item.SemanticMetadata.Text.Label,
-            Command     = item.Command,
-            IsEnabled   = item.IsEnabled,
+            Header           = item.SemanticMetadata.Text.Label,
+            Command          = item.Command,
+            CommandParameter = commandParameter,
+            IsEnabled        = item.IsEnabled,
         };
 
         return wpfItem;

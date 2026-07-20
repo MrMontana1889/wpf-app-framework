@@ -31,8 +31,17 @@ The result is a coherent, layered system that treats toolbars, menus, and keyboa
 We adopt a **unified semantic architecture for toolbars and menus** with the following principles:
 
 1. **Commands are the single execution axis**
-   - All user actions are represented by shared `ICommand` instances
-   - Toolbars, menus, and keyboard shortcuts invoke the *same* command objects
+   - All user actions are represented by shared ICommand instances
+   - Toolbars, menus, and keyboard shortcuts invoke the same command objects
+   - Semantic menu definitions may optionally provide command parameter metadata through either:
+     - `CommandParameter`
+     - `CommandParameterProvider`
+   - A semantic menu item may specify:
+     - neither `CommandParameter` nor `CommandParameterProvider`
+     - a static `CommandParameter`
+     - a dynamic `CommandParameterProvider`
+   - A semantic menu item must not specify both `CommandParameter` and `CommandParameterProvider`
+   - Command parameter providers are evaluated by the projection layer at runtime and allow immutable semantic menu definitions to participate in context-sensitive scenarios such as context menus operating on a selected item
 
 2. **Semantic models live in Dev.Core**
    - Toolbars: `ToolbarItem`, `ToolbarItemKind`, semantic metadata
