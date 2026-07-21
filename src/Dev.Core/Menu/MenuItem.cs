@@ -20,6 +20,10 @@ public sealed class MenuItem
 
     public ICommand? Command { get; }
 
+    public object? CommandParameter { get; }
+
+    public Func<object?>? CommandParameterProvider { get; }
+
     public bool IsEnabled { get; }
 
     public bool IsVisible { get; }
@@ -34,6 +38,8 @@ public sealed class MenuItem
         MenuItemSemanticMetadata semanticMetadata,
         MenuShortcut? shortcut = null,
         ICommand? command = null,
+        object? commandParameter = null,
+        Func<object?>? commandParameterProvider = null,
         bool isEnabled = true,
         bool isVisible = true,
         bool? isChecked = null,
@@ -47,6 +53,9 @@ public sealed class MenuItem
         if (children?.Any(static child => child is null) == true)
             throw new ArgumentException("Menu children cannot contain null entries.", nameof(children));
 
+        if (commandParameter is not null && commandParameterProvider is not null)
+            throw new ArgumentException("CommandParameter and CommandParameterProvider must not both be non-null.", nameof(commandParameterProvider));
+
         ValidateKindConfiguration(kind, shortcut, command, isChecked, children);
 
         Id = id;
@@ -54,6 +63,8 @@ public sealed class MenuItem
         SemanticMetadata = semanticMetadata;
         Shortcut = shortcut;
         Command = command;
+        CommandParameter = commandParameter;
+        CommandParameterProvider = commandParameterProvider;
         IsEnabled = isEnabled;
         IsVisible = isVisible;
         IsChecked = isChecked;

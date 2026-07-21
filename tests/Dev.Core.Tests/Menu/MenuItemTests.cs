@@ -168,6 +168,102 @@ public class MenuItemTests
                 command: new TestCommand()));
     }
 
+    // -----------------------------------------------------------------------
+    // CommandParameter and CommandParameterProvider tests
+    // -----------------------------------------------------------------------
+
+    [Test]
+    public void Constructor_BothCommandParameterAndProviderNull_IsAllowed()
+    {
+        Assert.DoesNotThrow(() =>
+            _ = new MenuItem(
+                new MenuItemId("File.Open"),
+                MenuItemKind.Command,
+                CreateMetadata("Open"),
+                command: new TestCommand()));
+    }
+
+    [Test]
+    public void Constructor_StaticCommandParameterOnly_IsAllowed()
+    {
+        var parameter = new object();
+
+        var item = new MenuItem(
+            new MenuItemId("File.Open"),
+            MenuItemKind.Command,
+            CreateMetadata("Open"),
+            command: new TestCommand(),
+            commandParameter: parameter);
+
+        Assert.That(item.CommandParameter, Is.SameAs(parameter));
+        Assert.That(item.CommandParameterProvider, Is.Null);
+    }
+
+    [Test]
+    public void Constructor_CommandParameterProviderOnly_IsAllowed()
+    {
+        var parameterValue = new object();
+        Func<object?> provider = () => parameterValue;
+
+        var item = new MenuItem(
+            new MenuItemId("File.Open"),
+            MenuItemKind.Command,
+            CreateMetadata("Open"),
+            command: new TestCommand(),
+            commandParameterProvider: provider);
+
+        Assert.That(item.CommandParameter, Is.Null);
+        Assert.That(item.CommandParameterProvider, Is.SameAs(provider));
+    }
+
+    [Test]
+    public void Constructor_BothCommandParameterAndProviderNonNull_Throws()
+    {
+        Assert.Throws<ArgumentException>(() =>
+            _ = new MenuItem(
+                new MenuItemId("File.Open"),
+                MenuItemKind.Command,
+                CreateMetadata("Open"),
+                command: new TestCommand(),
+                commandParameter: new object(),
+                commandParameterProvider: () => null));
+    }
+
+    [Test]
+    public void CommandParameterProvider_WhenInvoked_ReturnsDelegateResult()
+    {
+        var expectedValue = new object();
+        var item = new MenuItem(
+            new MenuItemId("File.Open"),
+            MenuItemKind.Command,
+            CreateMetadata("Open"),
+            command: new TestCommand(),
+            commandParameterProvider: () => expectedValue);
+
+        var result = item.CommandParameterProvider!.Invoke();
+
+        Assert.That(result, Is.SameAs(expectedValue));
+    }
+
+    [Test]
+    public void CommandParameterProvider_WhenDelegateStateChanges_ReturnsUpdatedValue()
+    {
+        object? current = null;
+        var item = new MenuItem(
+            new MenuItemId("File.Open"),
+            MenuItemKind.Command,
+            CreateMetadata("Open"),
+            command: new TestCommand(),
+            commandParameterProvider: () => current);
+
+        Assert.That(item.CommandParameterProvider!.Invoke(), Is.Null);
+
+        var row = new object();
+        current = row;
+
+        Assert.That(item.CommandParameterProvider!.Invoke(), Is.SameAs(row));
+    }
+
     private static MenuItem CreateCommandChild(
         string id = "File.Open",
         string label = "Open",
